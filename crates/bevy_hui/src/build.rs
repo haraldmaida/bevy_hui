@@ -1,6 +1,6 @@
 use crate::{
     compile::CompileContextEvent,
-    data::{AttrTokens, HtmlTemplate, NodeType, XNode},
+    data::{AnimationTimer, AttrTokens, HtmlTemplate, NodeType, XNode},
     prelude::ComponentBindings,
     styles::{HoverTimer, HtmlStyle, PressedTimer},
     util::SlotId,
@@ -244,6 +244,7 @@ fn spawn_ui(
     mut unbuild: Query<(Entity, &HtmlNode, &mut TemplateProperties), Without<FullyBuild>>,
     assets: Res<Assets<HtmlTemplate>>,
     server: Res<AssetServer>,
+    mut texture_atlases: ResMut<Assets<TextureAtlasLayout>>,
     custom_comps: Res<ComponentBindings>,
 ) {
     unbuild
@@ -261,6 +262,7 @@ fn spawn_ui(
                 root_entity,
                 cmd.reborrow(),
                 &server,
+                &mut texture_atlases,
                 &custom_comps,
                 &template,
             );
@@ -282,6 +284,7 @@ fn spawn_ui(
 struct TemplateBuilder<'w, 's> {
     cmd: Commands<'w, 's>,
     server: &'w AssetServer,
+    texture_atlases: &'w mut Assets<TextureAtlasLayout>,
     scope: Entity,
     comps: &'w ComponentBindings,
     subscriber: TemplatePropertySubscriber,
@@ -296,6 +299,7 @@ impl<'w, 's> TemplateBuilder<'w, 's> {
         scope: Entity,
         cmd: Commands<'w, 's>,
         server: &'w AssetServer,
+        texture_atlases: &'w mut Assets<TextureAtlasLayout>,
         comps: &'w ComponentBindings,
         template: &'w HtmlTemplate,
     ) -> Self {
@@ -303,6 +307,7 @@ impl<'w, 's> TemplateBuilder<'w, 's> {
             cmd,
             scope,
             server,
+            texture_atlases,
             comps,
             template,
             subscriber: Default::default(),
@@ -424,7 +429,11 @@ impl<'w, 's> TemplateBuilder<'w, 's> {
             // --------------------------------
             // spawn image
             NodeType::Image => {
-                self.cmd.entity(entity).insert((
+                let mut img = self.cmd.entity(entity);
+                let animated = styles.computed.atlas.is_some();
+                let animation_rate = styles.computed.rate as u64;
+
+                img.insert((
                     ImageNode {
                         image: node
                             .src
@@ -438,10 +447,23 @@ impl<'w, 's> TemplateBuilder<'w, 's> {
                             .cloned()
                             .unwrap_or_default(),
                         rect: styles.computed.image_region.clone(),
+                        texture_atlas: styles
+                            .computed
+                            .atlas
+                            .as_ref()
+                            .map(|atlas| {
+                                let atlas_layout = TextureAtlasLayout::from_grid(atlas.size, atlas.columns, atlas.rows, atlas.padding, atlas.offset);
+                                let atlas_handle = self.texture_atlases.add(atlas_layout);
+                                TextureAtlas::from(atlas_handle)
+                            }),
                         ..default()
                     },
                     styles,
                 ));
+
+                if animated {
+                    img.insert(AnimationTimer(Timer::new(Duration::from_secs(animation_rate * 1000), TimerMode::Repeating)));
+                }
             }
             // --------------------------------
             // spawn image

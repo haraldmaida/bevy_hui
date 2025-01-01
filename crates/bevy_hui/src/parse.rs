@@ -1,7 +1,7 @@
-use crate::data::{Action, AttrTokens, Attribute, HtmlTemplate, StyleAttr, XNode};
+use crate::data::{Action, AnimationDirection, Atlas, AttrTokens, Attribute, HtmlTemplate, StyleAttr, XNode};
 use crate::prelude::NodeType;
 use crate::util::SlotMap;
-use bevy::math::{Rect, Vec2};
+use bevy::math::{Rect, UVec2, Vec2};
 use bevy::prelude::EaseFunction;
 use bevy::sprite::{BorderRect, SliceScaleMode, TextureSlicer};
 use bevy::ui::widget::NodeImageMode;
@@ -419,6 +419,11 @@ where
         b"min_height" => map(parse_val, StyleAttr::MinHeight)(value)?,
         b"min_width" => map(parse_val, StyleAttr::MinWidth)(value)?,
         b"delay" => map(parse_delay, StyleAttr::Delay)(value)?,
+        b"atlas" => map(parse_atlas, StyleAttr::Atlas)(value)?,
+        b"duration" => map(parse_number, StyleAttr::Duration)(value)?,
+        b"direction" => map(parse_direction, StyleAttr::Direction)(value)?,
+        b"iterations" => map(parse_number, StyleAttr::Iterationns)(value)?,
+        b"rate" => map(parse_number, StyleAttr::Rate)(value)?,
         b"ease" => map(parse_easing, StyleAttr::Easing)(value)?,
         b"image_region" => map(parse_rect, StyleAttr::ImageRegion)(value)?,
         b"position" => map(parse_position_type, StyleAttr::Position)(value)?,
@@ -809,6 +814,48 @@ where
     )(input)
 }
 
+fn parse_direction<'a, E>(input: &'a [u8]) -> IResult<&'a [u8], AnimationDirection, E>
+where
+    E: ParseError<&'a [u8]> + ContextError<&'a [u8]>,
+{
+    context(
+        "flex_wrap has no valid value. Try `wrap` `no_wrap` `wrap_reverse`",
+        alt((
+            map(tag("forward"), |_| AnimationDirection::Forward),
+            map(tag("reverse"), |_| AnimationDirection::Reverse),
+            map(tag("alternate_forward"), |_| AnimationDirection::AlternateForward),
+            map(tag("alternate_reverse"), |_| AnimationDirection::AlternateReverse),
+        )),
+    )(input)
+}
+
+fn parse_atlas<'a, E>(input: &'a [u8]) -> IResult<&'a [u8], Option<Atlas>, E>
+where
+    E: ParseError<&'a [u8]> + ContextError<&'a [u8]>,
+{
+    context(
+        "image_atlas has no valid value. Try `(32, 32) 1 7 (0, 0) (0, 0)`",
+        alt((
+            map(
+                tuple((
+                    preceded(multispace0, parse_uvec2),
+                    preceded(multispace0, parse_number),
+                    preceded(multispace0, parse_number),
+                    preceded(multispace0, parse_uvec2),
+                    preceded(multispace0, parse_uvec2),
+                )),
+                |(size, columns, rows, padding, offset)| Some(Atlas {
+                    size: size,
+                    columns: columns as u32,
+                    rows: rows as u32,
+                    padding: Some(padding),
+                    offset: Some(offset),
+                }),
+            ),
+            )),
+    )(input)
+}
+
 // 10px tiled tiled 1
 fn parse_image_slice<'a, E>(input: &'a [u8]) -> IResult<&'a [u8], NodeImageMode, E>
 where
@@ -990,6 +1037,28 @@ where
                 tag(")"),
             ),
             |(x, y)| Vec2::new(x, y),
+        ),
+    )(input)
+}
+
+/// A simple [glam::u32::UVec2]
+/// `(10,10)`
+fn parse_uvec2<'a, E>(input: &'a [u8]) -> IResult<&'a [u8], UVec2, E>
+where
+    E: ParseError<&'a [u8]> + ContextError<&'a [u8]>,
+{
+    context(
+        "Is not a valid Vec2, try `(u32,u32)`",
+        map(
+            delimited(
+                tag("("),
+                tuple((
+                    preceded(multispace0, parse_number),
+                    preceded(tag(","), preceded(multispace0, parse_number)),
+                )),
+                tag(")"),
+            ),
+            |(x, y)| UVec2::new(x as u32, y as u32),
         ),
     )(input)
 }

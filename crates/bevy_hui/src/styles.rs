@@ -1,4 +1,4 @@
-use crate::{build::InteractionObverser, data::StyleAttr};
+use crate::{build::InteractionObverser, data::{AnimationDirection, Atlas, StyleAttr}};
 use bevy::{
     ecs::{query::QueryEntityError, system::SystemParam},
     prelude::*,
@@ -405,7 +405,12 @@ pub struct ComputedStyle {
     pub font: Handle<Font>,
     pub font_size: f32,
     pub font_color: Color,
+    pub atlas: Option<Atlas>,
     pub delay: f32,
+    pub duration: i64,
+    pub iterations: i64,
+    pub rate: f32,
+    pub direction: AnimationDirection,
     pub easing: Option<EaseFunction>,
 }
 
@@ -423,7 +428,12 @@ impl Default for ComputedStyle {
             font: Handle::default(),
             font_size: 12.,
             font_color: Color::WHITE,
+            atlas: None,
             delay: 0.,
+            duration: 0,
+            rate: 31.25,
+            iterations: 0,
+            direction: AnimationDirection::Forward,
             easing: Some(EaseFunction::Linear),
         }
     }
@@ -543,7 +553,12 @@ impl HtmlStyle {
             StyleAttr::FontSize(f) => self.computed.font_size = f,
             StyleAttr::FontColor(color) => self.computed.font_color = color,
             StyleAttr::Background(color) => self.computed.background = color,
+            StyleAttr::Atlas(f) => self.computed.atlas = f,
             StyleAttr::Delay(f) => self.computed.delay = f,
+            StyleAttr::Duration(f) => self.computed.duration = f,
+            StyleAttr::Rate(f) => self.computed.rate = f,
+            StyleAttr::Iterationns(f) => self.computed.iterations = f,
+            StyleAttr::Direction(f) => self.computed.direction = f,
             StyleAttr::Easing(ease) => self.computed.easing = Some(ease),
             StyleAttr::ImageScaleMode(mode) => self.computed.image_mode = Some(mode),
             StyleAttr::ImageRegion(rect) => self.computed.image_region = Some(rect),

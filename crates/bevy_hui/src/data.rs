@@ -138,11 +138,38 @@ impl Action {
 
 #[derive(Debug, Clone, Reflect)]
 #[reflect]
+pub struct Atlas {
+    pub size: UVec2,
+    pub columns: u32,
+    pub rows: u32,
+    pub padding: Option<UVec2>,
+    pub offset: Option<UVec2>,
+}
+
+impl Default for Atlas {
+    fn default() -> Self {
+        Atlas { size: [0,0].into(), columns: 0, rows: 0, padding: None, offset: None }
+    }
+}
+
+#[derive(Debug, Default, Reflect, PartialEq, Clone)]
+#[reflect]
+pub enum AnimationDirection {
+    #[default]
+    Forward,
+    Reverse,
+    AlternateForward,
+    AlternateReverse,
+}
+
+#[derive(Debug, Clone, Reflect)]
+#[reflect]
 pub enum StyleAttr {
     Display(Display),
     Position(PositionType),
     Overflow(Overflow),
     OverflowClipMargin(OverflowClipMargin),
+    FrameTime(Val),
     Left(Val),
     Right(Val),
     Top(Val),
@@ -213,6 +240,11 @@ pub enum StyleAttr {
     // animations
     Delay(f32),
     Easing(EaseFunction),
+    Atlas(Option<Atlas>),
+    Duration(i64),
+    Iterationns(i64),
+    Direction(AnimationDirection),
+    Rate(i64),
 
     // -----
     // image
@@ -225,3 +257,6 @@ impl Default for StyleAttr {
         StyleAttr::Display(Display::None)
     }
 }
+
+#[derive(Component)]
+pub struct AnimationTimer(pub Timer);

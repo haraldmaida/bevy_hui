@@ -2,7 +2,9 @@
 #![allow(rustdoc::redundant_explicit_links)]
 #![doc = include_str!("../../../README.md")]
 
-use bevy::app::{App, Plugin};
+use bevy::{app::{App, Plugin, Update}, prelude::{ImageNode, Query, Res, With}, time::Time};
+use data::AnimationTimer;
+use styles::HtmlStyle;
 
 mod auto;
 mod bindings;
@@ -33,6 +35,22 @@ pub mod prelude {
     pub use crate::HuiPlugin;
 }
 
+fn run_animations(
+    time: Res<Time>,
+    mut query: Query<(&mut AnimationTimer, &mut ImageNode, &HtmlStyle)>,
+) {
+    for (mut timer, mut node, style) in query.iter_mut() {
+        timer.0.tick(time.delta());
+
+        if timer.0.finished() {
+            if let Some(atlas) = &mut node.texture_atlas {
+                let atlas_details = style.computed.atlas.as_ref().unwrap();
+                atlas.index = (atlas.index + 1) % (atlas_details.columns * atlas_details.rows) as usize;
+            }
+        }
+    }
+}
+
 pub struct HuiPlugin;
 impl Plugin for HuiPlugin {
     fn build(&self, app: &mut App) {
@@ -42,6 +60,6 @@ impl Plugin for HuiPlugin {
             bindings::BindingPlugin,
             styles::TransitionPlugin,
             compile::CompilePlugin,
-        ));
+        )).add_systems(Update, run_animations);
     }
 }
