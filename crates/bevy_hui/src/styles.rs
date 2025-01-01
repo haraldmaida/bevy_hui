@@ -407,6 +407,8 @@ pub struct ComputedStyle {
     pub font_color: Color,
     pub delay: f32,
     pub easing: Option<EaseFunction>,
+    pub zindex: Option<ZIndex>,
+    pub global_zindex: Option<GlobalZIndex>,
 }
 
 impl Default for ComputedStyle {
@@ -425,6 +427,8 @@ impl Default for ComputedStyle {
             font_color: Color::WHITE,
             delay: 0.,
             easing: Some(EaseFunction::Linear),
+            zindex: None,
+            global_zindex: None,
         }
     }
 }
@@ -515,6 +519,8 @@ impl HtmlStyle {
             StyleAttr::JustifyContent(justify_content) => {
                 self.computed.node.justify_content = justify_content
             }
+            StyleAttr::Zindex(index) => self.computed.zindex = Some(index),
+            StyleAttr::GlobalZIndex(index) => self.computed.global_zindex = Some(index),
             StyleAttr::Margin(ui_rect) => self.computed.node.margin = ui_rect,
             StyleAttr::Padding(ui_rect) => self.computed.node.padding = ui_rect,
             StyleAttr::Border(ui_rect) => self.computed.node.border = ui_rect,

@@ -162,6 +162,8 @@ pub enum StyleAttr {
     JustifyContent(JustifyContent),
     Margin(UiRect),
     Padding(UiRect),
+    Zindex(ZIndex),
+    GlobalZIndex(GlobalZIndex),
 
     // ------------
     // border

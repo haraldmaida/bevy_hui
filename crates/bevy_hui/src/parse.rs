@@ -6,9 +6,7 @@ use bevy::prelude::EaseFunction;
 use bevy::sprite::{BorderRect, SliceScaleMode, TextureSlicer};
 use bevy::ui::widget::NodeImageMode;
 use bevy::ui::{
-    AlignContent, AlignItems, AlignSelf, Display, FlexDirection, FlexWrap, GridAutoFlow,
-    GridPlacement, GridTrack, JustifyContent, JustifyItems, JustifySelf, Outline, Overflow,
-    OverflowAxis, OverflowClipBox, OverflowClipMargin, PositionType, RepeatedGridTrack,
+    AlignContent, AlignItems, AlignSelf, Display, FlexDirection, FlexWrap, GlobalZIndex, GridAutoFlow, GridPlacement, GridTrack, JustifyContent, JustifyItems, JustifySelf, Outline, Overflow, OverflowAxis, OverflowClipBox, OverflowClipMargin, PositionType, RepeatedGridTrack, ZIndex
 };
 use bevy::utils::HashMap;
 use bevy::{
@@ -423,6 +421,9 @@ where
         b"image_region" => map(parse_rect, StyleAttr::ImageRegion)(value)?,
         b"position" => map(parse_position_type, StyleAttr::Position)(value)?,
         b"display" => map(parse_display, StyleAttr::Display)(value)?,
+        b"zindex" => map(parse_number, |i| StyleAttr::Zindex(ZIndex(i32::try_from(i).unwrap_or_default())))(value)?,
+        b"global_zindex" => map(parse_number, |i| StyleAttr::GlobalZIndex(GlobalZIndex(i32::try_from(i).unwrap_or_default())))(value)?,
+        b"aspect_ratio" => map(parse_float, StyleAttr::AspectRatio)(value)?,
         b"overflow" => map(parse_overflow, StyleAttr::Overflow)(value)?,
         b"overflow_clip_margin" => map(parse_overflow_margin, StyleAttr::OverflowClipMargin)(value)?,
 
