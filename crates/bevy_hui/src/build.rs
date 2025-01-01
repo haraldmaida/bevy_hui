@@ -1,6 +1,6 @@
 use crate::{
     compile::CompileContextEvent,
-    data::{AnimationTimer, AttrTokens, HtmlTemplate, NodeType, XNode},
+    data::{AnimationDirection, AnimationDuration, AnimationFrame, AnimationIterations, AnimationTimer, AttrTokens, HtmlTemplate, NodeType, XNode},
     prelude::ComponentBindings,
     styles::{HoverTimer, HtmlStyle, PressedTimer},
     util::SlotId,
@@ -431,7 +431,13 @@ impl<'w, 's> TemplateBuilder<'w, 's> {
             NodeType::Image => {
                 let mut img = self.cmd.entity(entity);
                 let animated = styles.computed.atlas.is_some();
-                let animation_rate = styles.computed.rate as u64;
+                let animation_rate = styles.computed.rate as f32 / 1000.0;
+                let animation_duration = styles.computed.duration;
+                let animation_direction = styles.computed.direction.clone();
+                let animation_iterations = styles.computed.iterations.clone();
+                let animation_frames = styles.computed.frames.clone();
+                let atlas_details = styles.computed.atlas.clone();
+                
 
                 img.insert((
                     ImageNode {
@@ -462,7 +468,39 @@ impl<'w, 's> TemplateBuilder<'w, 's> {
                 ));
 
                 if animated {
-                    img.insert(AnimationTimer(Timer::new(Duration::from_secs(animation_rate * 1000), TimerMode::Repeating)));
+                    let mut starting_frame = AnimationFrame(0);
+
+                    if animation_frames.len() > 0 {
+                        starting_frame.0 = match animation_direction {
+                            AnimationDirection::Forward => animation_frames[0] as usize,
+                            AnimationDirection::Reverse => animation_frames[animation_frames.len() - 1] as usize,
+                            AnimationDirection::AlternateForward => animation_frames[0] as usize,
+                            AnimationDirection::AlternateReverse => animation_frames[animation_frames.len() - 1] as usize,
+                        }
+                    } else {
+                        let atlas = atlas_details.unwrap();
+                        
+                        starting_frame.0 = match animation_direction {
+                            AnimationDirection::Forward => 0,
+                            AnimationDirection::Reverse => (atlas.rows * atlas.columns) as usize - 1,
+                            AnimationDirection::AlternateForward => 0,
+                            AnimationDirection::AlternateReverse => (atlas.rows * atlas.columns) as usize - 1,
+                        }
+                    }
+
+                    let starting_direction = match animation_direction {
+                        AnimationDirection::AlternateForward => AnimationDirection::Forward,
+                        AnimationDirection::AlternateReverse => AnimationDirection::Reverse,
+                        _ => animation_direction.clone(),
+                    };
+
+                    img.insert((
+                        AnimationTimer(Timer::new(Duration::from_secs_f32(animation_rate), TimerMode::Repeating)),
+                        starting_direction,
+                        starting_frame,
+                        AnimationIterations(animation_iterations),
+                        AnimationDuration(animation_duration)
+                    ));
                 }
             }
             // --------------------------------

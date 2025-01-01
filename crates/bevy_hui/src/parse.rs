@@ -422,8 +422,9 @@ where
         b"atlas" => map(parse_atlas, StyleAttr::Atlas)(value)?,
         b"duration" => map(parse_number, StyleAttr::Duration)(value)?,
         b"direction" => map(parse_direction, StyleAttr::Direction)(value)?,
-        b"iterations" => map(parse_number, StyleAttr::Iterationns)(value)?,
+        b"iterations" => map(parse_number, StyleAttr::Iterations)(value)?,
         b"rate" => map(parse_number, StyleAttr::Rate)(value)?,
+        b"frames" => map(parse_number_vec, StyleAttr::Frames)(value)?,
         b"ease" => map(parse_easing, StyleAttr::Easing)(value)?,
         b"image_region" => map(parse_rect, StyleAttr::ImageRegion)(value)?,
         b"position" => map(parse_position_type, StyleAttr::Position)(value)?,
@@ -1039,6 +1040,22 @@ where
             |(x, y)| Vec2::new(x, y),
         ),
     )(input)
+}
+
+/// A simple [alloc::vec::Vec]
+/// `(10.2,10.1)`
+fn parse_number_vec<'a, E>(input: &'a [u8]) -> IResult<&'a [u8], Vec<i64>, E>
+where
+    E: ParseError<&'a [u8]> + ContextError<&'a [u8]>,
+{
+    let (_, val_str) = parse_str(input)?;
+
+    let vals = val_str
+        .split(',')
+        .filter_map(|s| s.trim().parse::<i64>().ok())
+        .collect();
+
+    Ok((input, vals))
 }
 
 /// A simple [glam::u32::UVec2]

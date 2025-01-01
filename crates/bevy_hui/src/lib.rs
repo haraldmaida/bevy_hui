@@ -2,8 +2,8 @@
 #![allow(rustdoc::redundant_explicit_links)]
 #![doc = include_str!("../../../README.md")]
 
-use bevy::{app::{App, Plugin, Update}, prelude::{ImageNode, Query, Res, With}, time::Time};
-use data::AnimationTimer;
+use bevy::{app::{App, Plugin, Update}, prelude::{ImageNode, Query, Res}, time::Time};
+use data::{AnimationDirection, AnimationDuration, AnimationFrame, AnimationIterations, AnimationTimer};
 use styles::HtmlStyle;
 
 mod auto;
@@ -37,15 +37,87 @@ pub mod prelude {
 
 fn run_animations(
     time: Res<Time>,
-    mut query: Query<(&mut AnimationTimer, &mut ImageNode, &HtmlStyle)>,
+    mut query: Query<(&mut AnimationTimer, &mut AnimationDirection, &mut AnimationDuration, &mut AnimationIterations, &mut AnimationFrame, &mut ImageNode, &HtmlStyle)>,
 ) {
-    for (mut timer, mut node, style) in query.iter_mut() {
+    for (mut timer, mut direction, mut duration, mut iterations, mut frame, mut node, style) in query.iter_mut() {
+        if iterations.0 == 0 {
+            continue;
+        }
+
+        duration.0 = duration.0 - (time.delta_secs() * 1000.0) as i64;
+
+        if duration.0 > style.computed.duration {
+            continue;
+        }
+
         timer.0.tick(time.delta());
 
         if timer.0.finished() {
-            if let Some(atlas) = &mut node.texture_atlas {
-                let atlas_details = style.computed.atlas.as_ref().unwrap();
-                atlas.index = (atlas.index + 1) % (atlas_details.columns * atlas_details.rows) as usize;
+            iterations.0 = iterations.0 - 1;
+
+            let atlas = node.texture_atlas.as_mut().unwrap();
+            let atlas_details = style.computed.atlas.as_ref().unwrap();
+            
+            if style.computed.frames.len() == 0 {
+                let frame_count = (atlas_details.columns * atlas_details.rows) as usize;
+
+                match *direction {
+                    AnimationDirection::Forward => {
+                        if atlas.index == frame_count - 1 {
+                            if style.computed.direction == AnimationDirection::AlternateForward || style.computed.direction == AnimationDirection::AlternateReverse{
+                                *direction = AnimationDirection::Reverse;
+                                frame.0 = frame_count - 2;
+                            } else {
+                                frame.0 = 0;
+                            }
+                        } else {
+                            frame.0 = frame.0 + 1;
+                        }
+                    }
+                    AnimationDirection::Reverse => {
+                        if atlas.index == 0 {
+                            if style.computed.direction == AnimationDirection::AlternateForward || style.computed.direction == AnimationDirection::AlternateReverse{
+                                *direction = AnimationDirection::Forward;
+                                frame.0 = 1;
+                            } else {
+                                frame.0 = frame_count - 1;
+                            }
+                        } else {
+                            frame.0 = frame.0 - 1;
+                        }
+                    }
+                    _ => (),
+                }
+            } else {
+                let frame_count = style.computed.frames.len();
+
+                match *direction {
+                    AnimationDirection::Forward => {
+                        if frame.0 == frame_count - 1 {
+                            if style.computed.direction == AnimationDirection::AlternateForward || style.computed.direction == AnimationDirection::AlternateReverse{
+                                *direction = AnimationDirection::Reverse;
+                                frame.0 = style.computed.frames[frame_count - 2] as usize;
+                            } else {
+                                frame.0 = style.computed.frames[0] as usize;
+                            }
+                        } else {
+                            frame.0 = style.computed.frames[frame_count + 1] as usize;
+                        }
+                    },
+                    AnimationDirection::Reverse => {
+                        if frame.0 == 0 {
+                            if style.computed.direction == AnimationDirection::AlternateForward || style.computed.direction == AnimationDirection::AlternateReverse{
+                                *direction = AnimationDirection::Forward;
+                                frame.0 = style.computed.frames[1] as usize;
+                            } else {
+                                frame.0 = style.computed.frames[frame_count - 1] as usize;
+                            }
+                        } else {
+                            frame.0 = style.computed.frames[frame_count - 1] as usize;
+                        }
+                    }
+                    _ => (),
+                }
             }
         }
     }

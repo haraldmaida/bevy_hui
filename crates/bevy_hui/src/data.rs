@@ -152,7 +152,7 @@ impl Default for Atlas {
     }
 }
 
-#[derive(Debug, Default, Reflect, PartialEq, Clone)]
+#[derive(Debug, Default, Reflect, PartialEq, Clone, Component)]
 #[reflect]
 pub enum AnimationDirection {
     #[default]
@@ -242,9 +242,10 @@ pub enum StyleAttr {
     Easing(EaseFunction),
     Atlas(Option<Atlas>),
     Duration(i64),
-    Iterationns(i64),
+    Iterations(i64),
     Direction(AnimationDirection),
     Rate(i64),
+    Frames(Vec<i64>),
 
     // -----
     // image
@@ -260,3 +261,12 @@ impl Default for StyleAttr {
 
 #[derive(Component)]
 pub struct AnimationTimer(pub Timer);
+
+#[derive(Component)]
+pub struct AnimationFrame(pub usize);
+
+#[derive(Component)]
+pub struct AnimationIterations(pub i64);
+
+#[derive(Component)]
+pub struct AnimationDuration(pub i64);
