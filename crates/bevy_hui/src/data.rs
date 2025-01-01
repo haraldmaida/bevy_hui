@@ -241,7 +241,7 @@ pub enum StyleAttr {
     Delay(f32),
     Easing(EaseFunction),
     Atlas(Option<Atlas>),
-    Duration(i64),
+    Duration(f32),
     Iterations(i64),
     Direction(AnimationDirection),
     Rate(i64),
@@ -269,4 +269,4 @@ pub struct AnimationFrame(pub usize);
 pub struct AnimationIterations(pub i64);
 
 #[derive(Component)]
-pub struct AnimationDuration(pub i64);
+pub struct AnimationDuration(pub f32);

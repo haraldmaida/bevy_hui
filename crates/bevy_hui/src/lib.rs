@@ -41,19 +41,23 @@ fn run_animations(
 ) {
     for (mut timer, mut direction, mut duration, mut iterations, mut frame, mut node, style) in query.iter_mut() {
         if iterations.0 == 0 {
+            println!("Out of iterations");
             continue;
         }
 
-        duration.0 = duration.0 - (time.delta_secs() * 1000.0) as i64;
+        if style.computed.duration > 0.0 {
+            duration.0 = duration.0 - time.delta_secs();
 
-        if duration.0 > style.computed.duration {
-            continue;
+            if duration.0 <= 0.0 {
+                println!("Duration up");
+                continue;
+            }
         }
 
         timer.0.tick(time.delta());
 
         if timer.0.finished() {
-            iterations.0 = iterations.0 - 1;
+            println!("Frame timer up");
 
             let atlas = node.texture_atlas.as_mut().unwrap();
             let atlas_details = style.computed.atlas.as_ref().unwrap();
@@ -70,6 +74,7 @@ fn run_animations(
                             } else {
                                 frame.0 = 0;
                             }
+                            iterations.0 = iterations.0 - 1;
                         } else {
                             frame.0 = frame.0 + 1;
                         }
@@ -82,12 +87,15 @@ fn run_animations(
                             } else {
                                 frame.0 = frame_count - 1;
                             }
+                            iterations.0 = iterations.0 - 1;
                         } else {
                             frame.0 = frame.0 - 1;
                         }
                     }
                     _ => (),
                 }
+
+                node.texture_atlas.as_mut().unwrap().index = frame.0;
             } else {
                 let frame_count = style.computed.frames.len();
 
@@ -96,28 +104,32 @@ fn run_animations(
                         if frame.0 == frame_count - 1 {
                             if style.computed.direction == AnimationDirection::AlternateForward || style.computed.direction == AnimationDirection::AlternateReverse{
                                 *direction = AnimationDirection::Reverse;
-                                frame.0 = style.computed.frames[frame_count - 2] as usize;
+                                frame.0 = frame_count - 2;
                             } else {
-                                frame.0 = style.computed.frames[0] as usize;
+                                frame.0 = 0;
                             }
+                            iterations.0 = iterations.0 - 1;
                         } else {
-                            frame.0 = style.computed.frames[frame_count + 1] as usize;
+                            frame.0 = frame.0 + 1;
                         }
                     },
                     AnimationDirection::Reverse => {
                         if frame.0 == 0 {
                             if style.computed.direction == AnimationDirection::AlternateForward || style.computed.direction == AnimationDirection::AlternateReverse{
                                 *direction = AnimationDirection::Forward;
-                                frame.0 = style.computed.frames[1] as usize;
+                                frame.0 = 1;
                             } else {
-                                frame.0 = style.computed.frames[frame_count - 1] as usize;
+                                frame.0 = frame_count - 1;
                             }
+                            iterations.0 = iterations.0 - 1;
                         } else {
-                            frame.0 = style.computed.frames[frame_count - 1] as usize;
+                            frame.0 = frame.0 - 1;
                         }
                     }
                     _ => (),
                 }
+
+                node.texture_atlas.as_mut().unwrap().index = style.computed.frames[frame.0] as usize;
             }
         }
     }

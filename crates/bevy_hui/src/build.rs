@@ -437,7 +437,41 @@ impl<'w, 's> TemplateBuilder<'w, 's> {
                 let animation_iterations = styles.computed.iterations.clone();
                 let animation_frames = styles.computed.frames.clone();
                 let atlas_details = styles.computed.atlas.clone();
-                
+                let mut starting_frame = 0;
+
+                if animated {
+                    if animation_frames.len() > 0 {
+                        starting_frame = match animation_direction {
+                            AnimationDirection::Forward => animation_frames[0] as usize,
+                            AnimationDirection::Reverse => animation_frames[animation_frames.len() - 1] as usize,
+                            AnimationDirection::AlternateForward => animation_frames[0] as usize,
+                            AnimationDirection::AlternateReverse => animation_frames[animation_frames.len() - 1] as usize,
+                        }
+                    } else {
+                        let atlas = atlas_details.unwrap();
+                        
+                        starting_frame = match animation_direction {
+                            AnimationDirection::Forward => 0,
+                            AnimationDirection::Reverse => (atlas.rows * atlas.columns) as usize - 1,
+                            AnimationDirection::AlternateForward => 0,
+                            AnimationDirection::AlternateReverse => (atlas.rows * atlas.columns) as usize - 1,
+                        }
+                    }
+
+                    let starting_direction = match animation_direction {
+                        AnimationDirection::AlternateForward => AnimationDirection::Forward,
+                        AnimationDirection::AlternateReverse => AnimationDirection::Reverse,
+                        _ => animation_direction.clone(),
+                    };
+
+                    img.insert((
+                        AnimationTimer(Timer::new(Duration::from_secs_f32(animation_rate), TimerMode::Repeating)),
+                        starting_direction,
+                        AnimationFrame(starting_frame),
+                        AnimationIterations(animation_iterations),
+                        AnimationDuration(animation_duration / 1000.0)
+                    ));
+                }
 
                 img.insert((
                     ImageNode {
@@ -460,48 +494,16 @@ impl<'w, 's> TemplateBuilder<'w, 's> {
                             .map(|atlas| {
                                 let atlas_layout = TextureAtlasLayout::from_grid(atlas.size, atlas.columns, atlas.rows, atlas.padding, atlas.offset);
                                 let atlas_handle = self.texture_atlases.add(atlas_layout);
-                                TextureAtlas::from(atlas_handle)
+                                
+                                TextureAtlas {
+                                    layout: atlas_handle,
+                                    index: starting_frame,
+                                }
                             }),
                         ..default()
                     },
                     styles,
                 ));
-
-                if animated {
-                    let mut starting_frame = AnimationFrame(0);
-
-                    if animation_frames.len() > 0 {
-                        starting_frame.0 = match animation_direction {
-                            AnimationDirection::Forward => animation_frames[0] as usize,
-                            AnimationDirection::Reverse => animation_frames[animation_frames.len() - 1] as usize,
-                            AnimationDirection::AlternateForward => animation_frames[0] as usize,
-                            AnimationDirection::AlternateReverse => animation_frames[animation_frames.len() - 1] as usize,
-                        }
-                    } else {
-                        let atlas = atlas_details.unwrap();
-                        
-                        starting_frame.0 = match animation_direction {
-                            AnimationDirection::Forward => 0,
-                            AnimationDirection::Reverse => (atlas.rows * atlas.columns) as usize - 1,
-                            AnimationDirection::AlternateForward => 0,
-                            AnimationDirection::AlternateReverse => (atlas.rows * atlas.columns) as usize - 1,
-                        }
-                    }
-
-                    let starting_direction = match animation_direction {
-                        AnimationDirection::AlternateForward => AnimationDirection::Forward,
-                        AnimationDirection::AlternateReverse => AnimationDirection::Reverse,
-                        _ => animation_direction.clone(),
-                    };
-
-                    img.insert((
-                        AnimationTimer(Timer::new(Duration::from_secs_f32(animation_rate), TimerMode::Repeating)),
-                        starting_direction,
-                        starting_frame,
-                        AnimationIterations(animation_iterations),
-                        AnimationDuration(animation_duration)
-                    ));
-                }
             }
             // --------------------------------
             // spawn image

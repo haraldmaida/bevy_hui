@@ -420,7 +420,7 @@ where
         b"min_width" => map(parse_val, StyleAttr::MinWidth)(value)?,
         b"delay" => map(parse_delay, StyleAttr::Delay)(value)?,
         b"atlas" => map(parse_atlas, StyleAttr::Atlas)(value)?,
-        b"duration" => map(parse_number, StyleAttr::Duration)(value)?,
+        b"duration" => map(parse_float, StyleAttr::Duration)(value)?,
         b"direction" => map(parse_direction, StyleAttr::Direction)(value)?,
         b"iterations" => map(parse_number, StyleAttr::Iterations)(value)?,
         b"rate" => map(parse_number, StyleAttr::Rate)(value)?,
