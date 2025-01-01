@@ -1,11 +1,11 @@
 use crate::{
     compile::CompileContextEvent,
-    data::{AnimationDirection, AnimationDuration, AnimationFrame, AnimationIterations, AnimationTimer, AttrTokens, HtmlTemplate, NodeType, XNode},
+    data::{ActiveAnimation, AnimationDirection, AttrTokens, HtmlTemplate, NodeType, XNode},
     prelude::ComponentBindings,
     styles::{HoverTimer, HtmlStyle, PressedTimer},
     util::SlotId,
 };
-use bevy::{prelude::*, utils::HashMap};
+use bevy::{prelude::*, tasks::futures_lite::stream::Then, utils::HashMap};
 use nom::{
     bytes::complete::{is_not, tag, take_until},
     character::complete::multispace0,
@@ -281,6 +281,43 @@ fn spawn_ui(
         });
 }
 
+fn calculate_starting_frame(start: usize, end: usize, direction: &AnimationDirection) -> usize {
+    match direction {
+        AnimationDirection::Forward => start,
+        AnimationDirection::Reverse => end,
+        AnimationDirection::AlternateForward => start,
+        AnimationDirection::AlternateReverse => end,
+    }
+}
+
+fn build_animation(style: &HtmlStyle) -> Option<ActiveAnimation> {
+    if style.computed.atlas.is_none() {
+        return None
+    }
+
+    let starting_frame = if !style.computed.frames.is_empty() {
+        calculate_starting_frame(style.computed.frames[0] as usize, style.computed.frames[style.computed.frames.len() - 1] as usize, &style.computed.direction)
+    } else {
+        let atlas = style.computed.atlas.as_ref().unwrap();
+
+        calculate_starting_frame(0, (atlas.rows * atlas.columns) as usize - 1, &style.computed.direction)
+    };
+
+    let starting_direction = match style.computed.direction {
+        AnimationDirection::AlternateForward => AnimationDirection::Forward,
+        AnimationDirection::AlternateReverse => AnimationDirection::Reverse,
+        _ => style.computed.direction.clone(),
+    };
+
+    Some(ActiveAnimation {
+        timer: Timer::new(Duration::from_secs_f32(style.computed.rate as f32 / 1000.0), TimerMode::Repeating),
+        direction: starting_direction,
+        frame: starting_frame,
+        iterations: style.computed.iterations,
+        duration: style.computed.duration / 1000.0,
+    })
+}
+
 struct TemplateBuilder<'w, 's> {
     cmd: Commands<'w, 's>,
     server: &'w AssetServer,
@@ -430,47 +467,15 @@ impl<'w, 's> TemplateBuilder<'w, 's> {
             // spawn image
             NodeType::Image => {
                 let mut img = self.cmd.entity(entity);
-                let animated = styles.computed.atlas.is_some();
-                let animation_rate = styles.computed.rate as f32 / 1000.0;
-                let animation_duration = styles.computed.duration;
-                let animation_direction = styles.computed.direction.clone();
-                let animation_iterations = styles.computed.iterations.clone();
-                let animation_frames = styles.computed.frames.clone();
-                let atlas_details = styles.computed.atlas.clone();
+
+                let animation_option = build_animation(&styles);
                 let mut starting_frame = 0;
 
-                if animated {
-                    if animation_frames.len() > 0 {
-                        starting_frame = match animation_direction {
-                            AnimationDirection::Forward => animation_frames[0] as usize,
-                            AnimationDirection::Reverse => animation_frames[animation_frames.len() - 1] as usize,
-                            AnimationDirection::AlternateForward => animation_frames[0] as usize,
-                            AnimationDirection::AlternateReverse => animation_frames[animation_frames.len() - 1] as usize,
-                        }
-                    } else {
-                        let atlas = atlas_details.unwrap();
-                        
-                        starting_frame = match animation_direction {
-                            AnimationDirection::Forward => 0,
-                            AnimationDirection::Reverse => (atlas.rows * atlas.columns) as usize - 1,
-                            AnimationDirection::AlternateForward => 0,
-                            AnimationDirection::AlternateReverse => (atlas.rows * atlas.columns) as usize - 1,
-                        }
-                    }
+                if animation_option.is_some() {
+                    let animation = animation_option.unwrap();
+                    starting_frame = animation.frame;
 
-                    let starting_direction = match animation_direction {
-                        AnimationDirection::AlternateForward => AnimationDirection::Forward,
-                        AnimationDirection::AlternateReverse => AnimationDirection::Reverse,
-                        _ => animation_direction.clone(),
-                    };
-
-                    img.insert((
-                        AnimationTimer(Timer::new(Duration::from_secs_f32(animation_rate), TimerMode::Repeating)),
-                        starting_direction,
-                        AnimationFrame(starting_frame),
-                        AnimationIterations(animation_iterations),
-                        AnimationDuration(animation_duration / 1000.0)
-                    ));
+                    img.insert(animation);
                 }
 
                 img.insert((
@@ -494,7 +499,7 @@ impl<'w, 's> TemplateBuilder<'w, 's> {
                             .map(|atlas| {
                                 let atlas_layout = TextureAtlasLayout::from_grid(atlas.size, atlas.columns, atlas.rows, atlas.padding, atlas.offset);
                                 let atlas_handle = self.texture_atlases.add(atlas_layout);
-                                
+
                                 TextureAtlas {
                                     layout: atlas_handle,
                                     index: starting_frame,

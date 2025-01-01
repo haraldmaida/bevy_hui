@@ -260,13 +260,10 @@ impl Default for StyleAttr {
 }
 
 #[derive(Component)]
-pub struct AnimationTimer(pub Timer);
-
-#[derive(Component)]
-pub struct AnimationFrame(pub usize);
-
-#[derive(Component)]
-pub struct AnimationIterations(pub i64);
-
-#[derive(Component)]
-pub struct AnimationDuration(pub f32);
+pub struct ActiveAnimation {
+    pub timer: Timer,
+    pub frame: usize,
+    pub iterations: i64,
+    pub duration: f32,
+    pub direction: AnimationDirection,
+}
