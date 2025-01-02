@@ -1,4 +1,5 @@
-use crate::data::{Action, AnimationDirection, Atlas, AttrTokens, Attribute, HtmlTemplate, StyleAttr, XNode};
+use crate::animation::{AnimationDirection, Atlas};
+use crate::data::{Action, AttrTokens, Attribute, HtmlTemplate, StyleAttr, XNode};
 use crate::prelude::NodeType;
 use crate::util::SlotMap;
 use bevy::math::{Rect, UVec2, Vec2};
@@ -419,12 +420,6 @@ where
         b"min_height" => map(parse_val, StyleAttr::MinHeight)(value)?,
         b"min_width" => map(parse_val, StyleAttr::MinWidth)(value)?,
         b"delay" => map(parse_delay, StyleAttr::Delay)(value)?,
-        b"atlas" => map(parse_atlas, StyleAttr::Atlas)(value)?,
-        b"duration" => map(parse_float, StyleAttr::Duration)(value)?,
-        b"direction" => map(parse_direction, StyleAttr::Direction)(value)?,
-        b"iterations" => map(parse_number, StyleAttr::Iterations)(value)?,
-        b"rate" => map(parse_number, StyleAttr::Rate)(value)?,
-        b"frames" => map(parse_number_vec, StyleAttr::Frames)(value)?,
         b"ease" => map(parse_easing, StyleAttr::Easing)(value)?,
         b"image_region" => map(parse_rect, StyleAttr::ImageRegion)(value)?,
         b"position" => map(parse_position_type, StyleAttr::Position)(value)?,
@@ -466,6 +461,14 @@ where
         b"shadow_offset" => map(tuple((parse_val,preceded(multispace0,parse_val))),|(x,y)| StyleAttr::ShadowOffset(x,y))(value)?,
         b"shadow_blur" => map(parse_val, StyleAttr::ShadowBlur)(value)?,
         b"shadow_spread" => map(parse_val, StyleAttr::ShadowSpread)(value)?,
+
+        //animation
+        b"atlas" => map(parse_atlas, StyleAttr::Atlas)(value)?,
+        b"duration" => map(parse_delay, StyleAttr::Duration)(value)?,
+        b"direction" => map(parse_direction, StyleAttr::Direction)(value)?,
+        b"iterations" => map(parse_number, StyleAttr::Iterations)(value)?,
+        b"fps" => map(parse_number, StyleAttr::FPS)(value)?,
+        b"frames" => map(parse_number_vec, StyleAttr::Frames)(value)?,
 
         _ => {
             let err = E::from_error_kind(

@@ -80,6 +80,12 @@
 | background            | ref `Color`                                                                                              |
 | border_color          | ref `Color`                                                                                              |
 | src                   | an asset path for image nodes                                                                            |
+| atlas                 | `(width, height) cols rows (padding x, padding y) (offset x, offset y)`                                  |
+| fps                   | `32`, `2`                                                                                                |
+| direction             | `forward`, `reverse`, `alternate_forward`, `alternate_reverse`                                           |
+| duration              | `100ms` `5s`                                                                                             |
+| iterations            | `1`, `5`                                                                                                 |
+| frames                | `0, 1, 2, 3, 4`, `0, 2, 4, 6, 8`                                                                         |
 
 ## Conditional Styles
 

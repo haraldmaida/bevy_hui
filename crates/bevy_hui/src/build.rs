@@ -1,11 +1,7 @@
 use crate::{
-    compile::CompileContextEvent,
-    data::{ActiveAnimation, AnimationDirection, AttrTokens, HtmlTemplate, NodeType, XNode},
-    prelude::ComponentBindings,
-    styles::{HoverTimer, HtmlStyle, PressedTimer},
-    util::SlotId,
+    animation::{AnimationDirection, ActiveAnimation}, compile::CompileContextEvent, data::{AttrTokens, HtmlTemplate, NodeType, XNode}, prelude::ComponentBindings, styles::{HoverTimer, HtmlStyle, PressedTimer}, util::SlotId
 };
-use bevy::{prelude::*, tasks::futures_lite::stream::Then, utils::HashMap};
+use bevy::{prelude::*, utils::HashMap};
 use nom::{
     bytes::complete::{is_not, tag, take_until},
     character::complete::multispace0,
@@ -310,7 +306,7 @@ fn build_animation(style: &HtmlStyle) -> Option<ActiveAnimation> {
     };
 
     Some(ActiveAnimation {
-        timer: Timer::new(Duration::from_secs_f32(style.computed.rate as f32 / 1000.0), TimerMode::Repeating),
+        timer: Timer::new(Duration::from_secs_f32(1.0 / style.computed.fps as f32), TimerMode::Repeating),
         direction: starting_direction,
         frame: starting_frame,
         iterations: style.computed.iterations,

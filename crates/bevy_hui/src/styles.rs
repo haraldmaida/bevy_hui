@@ -1,4 +1,4 @@
-use crate::{build::InteractionObverser, data::{AnimationDirection, Atlas, StyleAttr}};
+use crate::{animation::{AnimationDirection, Atlas}, build::InteractionObverser, data::StyleAttr};
 use bevy::{
     ecs::{query::QueryEntityError, system::SystemParam},
     prelude::*,
@@ -409,7 +409,7 @@ pub struct ComputedStyle {
     pub delay: f32,
     pub duration: f32,
     pub iterations: i64,
-    pub rate: i64,
+    pub fps: i64,
     pub frames: Vec<i64>,
     pub direction: AnimationDirection,
     pub easing: Option<EaseFunction>,
@@ -431,8 +431,8 @@ impl Default for ComputedStyle {
             font_color: Color::WHITE,
             atlas: None,
             delay: 0.,
-            duration: 0.0,
-            rate: 1,
+            duration: 0.,
+            fps: 1,
             frames: Vec::new(),
             iterations: -1,
             direction: AnimationDirection::Forward,
@@ -558,7 +558,7 @@ impl HtmlStyle {
             StyleAttr::Atlas(f) => self.computed.atlas = f,
             StyleAttr::Delay(f) => self.computed.delay = f,
             StyleAttr::Duration(f) => self.computed.duration = f,
-            StyleAttr::Rate(f) => self.computed.rate = f,
+            StyleAttr::FPS(f) => self.computed.fps = f,
             StyleAttr::Iterations(f) => self.computed.iterations = f,
             StyleAttr::Direction(f) => self.computed.direction = f,
             StyleAttr::Frames(f) => self.computed.frames = f,

@@ -1,3 +1,4 @@
+use crate::animation::{AnimationDirection, Atlas};
 use crate::prelude::*;
 use crate::util::{SlotId, SlotMap};
 use bevy::ecs::system::EntityCommands;
@@ -138,32 +139,6 @@ impl Action {
 
 #[derive(Debug, Clone, Reflect)]
 #[reflect]
-pub struct Atlas {
-    pub size: UVec2,
-    pub columns: u32,
-    pub rows: u32,
-    pub padding: Option<UVec2>,
-    pub offset: Option<UVec2>,
-}
-
-impl Default for Atlas {
-    fn default() -> Self {
-        Atlas { size: [0,0].into(), columns: 0, rows: 0, padding: None, offset: None }
-    }
-}
-
-#[derive(Debug, Default, Reflect, PartialEq, Clone, Component)]
-#[reflect]
-pub enum AnimationDirection {
-    #[default]
-    Forward,
-    Reverse,
-    AlternateForward,
-    AlternateReverse,
-}
-
-#[derive(Debug, Clone, Reflect)]
-#[reflect]
 pub enum StyleAttr {
     Display(Display),
     Position(PositionType),
@@ -244,7 +219,7 @@ pub enum StyleAttr {
     Duration(f32),
     Iterations(i64),
     Direction(AnimationDirection),
-    Rate(i64),
+    FPS(i64),
     Frames(Vec<i64>),
 
     // -----
@@ -257,13 +232,4 @@ impl Default for StyleAttr {
     fn default() -> Self {
         StyleAttr::Display(Display::None)
     }
-}
-
-#[derive(Component)]
-pub struct ActiveAnimation {
-    pub timer: Timer,
-    pub frame: usize,
-    pub iterations: i64,
-    pub duration: f32,
-    pub direction: AnimationDirection,
 }
