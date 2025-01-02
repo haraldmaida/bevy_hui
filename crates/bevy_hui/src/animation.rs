@@ -56,6 +56,10 @@ pub fn run_animations(
 
         active_animation.timer.tick(time.delta());
 
+        if style.computed.frames.len() == 1 {
+            continue;
+        }
+
         if active_animation.timer.finished() {
             let atlas = node.texture_atlas.as_mut().unwrap();
             let atlas_details = style.computed.atlas.as_ref().unwrap();
