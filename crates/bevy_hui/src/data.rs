@@ -1,3 +1,4 @@
+use crate::animation::{AnimationDirection, Atlas};
 use crate::prelude::*;
 use crate::util::{SlotId, SlotMap};
 use bevy::ecs::system::EntityCommands;
@@ -143,6 +144,7 @@ pub enum StyleAttr {
     Position(PositionType),
     Overflow(Overflow),
     OverflowClipMargin(OverflowClipMargin),
+    FrameTime(Val),
     Left(Val),
     Right(Val),
     Top(Val),
@@ -215,6 +217,12 @@ pub enum StyleAttr {
     // animations
     Delay(f32),
     Easing(EaseFunction),
+    Atlas(Option<Atlas>),
+    Duration(f32),
+    Iterations(i64),
+    Direction(AnimationDirection),
+    FPS(i64),
+    Frames(Vec<i64>),
 
     // -----
     // image

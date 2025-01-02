@@ -1,9 +1,5 @@
 use crate::{
-    compile::CompileContextEvent,
-    data::{AttrTokens, HtmlTemplate, NodeType, XNode},
-    prelude::ComponentBindings,
-    styles::{HoverTimer, HtmlStyle, PressedTimer},
-    util::SlotId,
+    animation::{AnimationDirection, ActiveAnimation}, compile::CompileContextEvent, data::{AttrTokens, HtmlTemplate, NodeType, XNode}, prelude::ComponentBindings, styles::{HoverTimer, HtmlStyle, PressedTimer}, util::SlotId
 };
 use bevy::{prelude::*, utils::HashMap};
 use nom::{
@@ -244,6 +240,7 @@ fn spawn_ui(
     mut unbuild: Query<(Entity, &HtmlNode, &mut TemplateProperties), Without<FullyBuild>>,
     assets: Res<Assets<HtmlTemplate>>,
     server: Res<AssetServer>,
+    mut texture_atlases: ResMut<Assets<TextureAtlasLayout>>,
     custom_comps: Res<ComponentBindings>,
 ) {
     unbuild
@@ -261,6 +258,7 @@ fn spawn_ui(
                 root_entity,
                 cmd.reborrow(),
                 &server,
+                &mut texture_atlases,
                 &custom_comps,
                 &template,
             );
@@ -279,9 +277,47 @@ fn spawn_ui(
         });
 }
 
+fn calculate_starting_frame(start: usize, end: usize, direction: &AnimationDirection) -> usize {
+    match direction {
+        AnimationDirection::Forward => start,
+        AnimationDirection::Reverse => end,
+        AnimationDirection::AlternateForward => start,
+        AnimationDirection::AlternateReverse => end,
+    }
+}
+
+fn build_animation(style: &HtmlStyle) -> Option<ActiveAnimation> {
+    if style.computed.atlas.is_none() {
+        return None
+    }
+
+    let starting_frame = if !style.computed.frames.is_empty() {
+        calculate_starting_frame(style.computed.frames[0] as usize, style.computed.frames[style.computed.frames.len() - 1] as usize, &style.computed.direction)
+    } else {
+        let atlas = style.computed.atlas.as_ref().unwrap();
+
+        calculate_starting_frame(0, (atlas.rows * atlas.columns) as usize - 1, &style.computed.direction)
+    };
+
+    let starting_direction = match style.computed.direction {
+        AnimationDirection::AlternateForward => AnimationDirection::Forward,
+        AnimationDirection::AlternateReverse => AnimationDirection::Reverse,
+        _ => style.computed.direction.clone(),
+    };
+
+    Some(ActiveAnimation {
+        timer: Timer::new(Duration::from_secs_f32(1.0 / style.computed.fps as f32), TimerMode::Repeating),
+        direction: starting_direction,
+        frame: starting_frame,
+        iterations: style.computed.iterations,
+        duration: style.computed.duration / 1000.0,
+    })
+}
+
 struct TemplateBuilder<'w, 's> {
     cmd: Commands<'w, 's>,
     server: &'w AssetServer,
+    texture_atlases: &'w mut Assets<TextureAtlasLayout>,
     scope: Entity,
     comps: &'w ComponentBindings,
     subscriber: TemplatePropertySubscriber,
@@ -296,6 +332,7 @@ impl<'w, 's> TemplateBuilder<'w, 's> {
         scope: Entity,
         cmd: Commands<'w, 's>,
         server: &'w AssetServer,
+        texture_atlases: &'w mut Assets<TextureAtlasLayout>,
         comps: &'w ComponentBindings,
         template: &'w HtmlTemplate,
     ) -> Self {
@@ -303,6 +340,7 @@ impl<'w, 's> TemplateBuilder<'w, 's> {
             cmd,
             scope,
             server,
+            texture_atlases,
             comps,
             template,
             subscriber: Default::default(),
@@ -424,7 +462,19 @@ impl<'w, 's> TemplateBuilder<'w, 's> {
             // --------------------------------
             // spawn image
             NodeType::Image => {
-                self.cmd.entity(entity).insert((
+                let mut img = self.cmd.entity(entity);
+
+                let animation_option = build_animation(&styles);
+                let mut starting_frame = 0;
+
+                if animation_option.is_some() {
+                    let animation = animation_option.unwrap();
+                    starting_frame = animation.frame;
+
+                    img.insert(animation);
+                }
+
+                img.insert((
                     ImageNode {
                         image: node
                             .src
@@ -438,6 +488,19 @@ impl<'w, 's> TemplateBuilder<'w, 's> {
                             .cloned()
                             .unwrap_or_default(),
                         rect: styles.computed.image_region.clone(),
+                        texture_atlas: styles
+                            .computed
+                            .atlas
+                            .as_ref()
+                            .map(|atlas| {
+                                let atlas_layout = TextureAtlasLayout::from_grid(atlas.size, atlas.columns, atlas.rows, atlas.padding, atlas.offset);
+                                let atlas_handle = self.texture_atlases.add(atlas_layout);
+
+                                TextureAtlas {
+                                    layout: atlas_handle,
+                                    index: starting_frame,
+                                }
+                            }),
                         ..default()
                     },
                     styles,

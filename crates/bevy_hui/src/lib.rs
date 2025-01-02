@@ -2,8 +2,10 @@
 #![allow(rustdoc::redundant_explicit_links)]
 #![doc = include_str!("../../../README.md")]
 
-use bevy::app::{App, Plugin};
+use bevy::{app::{App, Plugin, Update}, prelude::{ImageNode, Query, Res}, time::Time};
+use animation::run_animations;
 
+mod animation;
 mod auto;
 mod bindings;
 mod build;
@@ -32,7 +34,6 @@ pub mod prelude {
     pub use crate::styles::{HoverTimer, HtmlStyle, InteractionTimer, PressedTimer, UiActive};
     pub use crate::HuiPlugin;
 }
-
 pub struct HuiPlugin;
 impl Plugin for HuiPlugin {
     fn build(&self, app: &mut App) {
@@ -42,6 +43,6 @@ impl Plugin for HuiPlugin {
             bindings::BindingPlugin,
             styles::TransitionPlugin,
             compile::CompilePlugin,
-        ));
+        )).add_systems(Update, run_animations);
     }
 }
