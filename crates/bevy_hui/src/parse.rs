@@ -19,7 +19,7 @@ use bevy::{
 use nom::{
     branch::alt,
     bytes::complete::{is_not, tag, take_until, take_while, take_while1, take_while_m_n},
-    character::complete::multispace0,
+    character::complete::{multispace0, char},
     combinator::{complete, map, map_parser, not, rest},
     error::{context, ContextError, ErrorKind, ParseError},
     multi::{many0, separated_list1},
@@ -833,30 +833,104 @@ where
     )(input)
 }
 
+fn parse_dimensions<'a, E>(input: &'a [u8]) -> IResult<&'a [u8], UVec2, E>
+where
+    E: ParseError<&'a [u8]> + ContextError<&'a [u8]>,
+{
+    context(
+        "dimension has no valid value. Try `(32, 32)` or `32`",
+        alt((
+            // (10, 10)
+            complete(map(
+                preceded(multispace0, parse_uvec2),
+                |val| val,
+            )),
+            // 10
+            complete(map(
+                preceded(multispace0, parse_number),
+                |val| UVec2::new(val as u32, val as u32),
+            )),
+            
+        )),
+    )(input)
+}
+
 fn parse_atlas<'a, E>(input: &'a [u8]) -> IResult<&'a [u8], Option<Atlas>, E>
 where
     E: ParseError<&'a [u8]> + ContextError<&'a [u8]>,
 {
     context(
-        "image_atlas has no valid value. Try `(32, 32) 1 7 (0, 0) (0, 0)`",
+        "image_atlas has no valid value. Try `(32, 32) 1 7 p(0, 0) o(0, 0)`",
         alt((
-            map(
-                tuple((
-                    preceded(multispace0, parse_uvec2),
-                    preceded(multispace0, parse_number),
-                    preceded(multispace0, parse_number),
-                    preceded(multispace0, parse_uvec2),
-                    preceded(multispace0, parse_uvec2),
-                )),
-                |(size, columns, rows, padding, offset)| Some(Atlas {
-                    size: size,
-                    columns: columns as u32,
-                    rows: rows as u32,
-                    padding: Some(padding),
-                    offset: Some(offset),
-                }),
+            complete(
+                map(
+                    tuple((
+                        preceded(multispace0, parse_dimensions),
+                        preceded(multispace0, parse_number),
+                        preceded(multispace0, parse_number),
+                        preceded(tuple((multispace0, char('p'))), parse_dimensions),
+                        preceded(tuple((multispace0, char('o'))), parse_dimensions),
+                    )),
+                    |(size, columns, rows, padding, offset)| Some(Atlas {
+                        size: size,
+                        columns: columns as u32,
+                        rows: rows as u32,
+                        padding: Some(padding),
+                        offset: Some(offset),
+                    }),
+                )
             ),
-            )),
+            complete(
+                map(
+                    tuple((
+                        preceded(multispace0, parse_dimensions),
+                        preceded(multispace0, parse_number),
+                        preceded(multispace0, parse_number),
+                        preceded(tuple((multispace0, char('p'))), parse_dimensions)
+                    )),
+                    |(size, columns, rows, padding)| Some(Atlas {
+                        size: size,
+                        columns: columns as u32,
+                        rows: rows as u32,
+                        padding: Some(padding),
+                        offset: None,
+                    }),
+                )
+            ),
+            complete(
+                map(
+                    tuple((
+                        preceded(multispace0, parse_dimensions),
+                        preceded(multispace0, parse_number),
+                        preceded(multispace0, parse_number),
+                        preceded(tuple((multispace0, char('o'))), parse_dimensions)
+                    )),
+                    |(size, columns, rows, offset)| Some(Atlas {
+                        size: size,
+                        columns: columns as u32,
+                        rows: rows as u32,
+                        padding: None,
+                        offset: Some(offset),
+                    }),
+                )
+            ),
+            complete(
+                map(
+                    tuple((
+                        preceded(multispace0, parse_dimensions),
+                        preceded(multispace0, parse_number),
+                        preceded(multispace0, parse_number),
+                    )),
+                    |(size, columns, rows)| Some(Atlas {
+                        size: size,
+                        columns: columns as u32,
+                        rows: rows as u32,
+                        padding: None,
+                        offset: None,
+                    }),
+                )
+            ),
+        )),
     )(input)
 }
 
