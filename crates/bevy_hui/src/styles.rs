@@ -250,7 +250,7 @@ impl<'w, 's> UiStyleQuery<'w, 's> {
             }
             StyleAttr::RowGap(val) => style.row_gap = lerp_val(&computed.node.row_gap, val, ratio),
             StyleAttr::ColumnGap(val) => {
-                style.column_gap = lerp_val(&computed.node.max_height, val, ratio)
+                style.column_gap = lerp_val(&computed.node.column_gap, val, ratio)
             }
             StyleAttr::GridAutoFlow(grid_auto_flow) => style.grid_auto_flow = *grid_auto_flow,
             StyleAttr::GridTemplateRows(vec) => style.grid_template_rows = vec.clone(),
@@ -517,7 +517,7 @@ impl HtmlStyle {
             StyleAttr::MinWidth(val) => self.computed.node.min_width = val,
             StyleAttr::MinHeight(val) => self.computed.node.min_height = val,
             StyleAttr::MaxWidth(val) => self.computed.node.max_width = val,
-            StyleAttr::MaxHeight(val) => self.computed.node.min_height = val,
+            StyleAttr::MaxHeight(val) => self.computed.node.max_height = val,
             StyleAttr::AspectRatio(f) => self.computed.node.aspect_ratio = Some(f),
             StyleAttr::AlignItems(align_items) => self.computed.node.align_items = align_items,
             StyleAttr::JustifyItems(justify_items) => {
