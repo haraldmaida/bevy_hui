@@ -765,7 +765,7 @@ dependencies = [
 
 [[package]]
 name = "bevy_hui"
-version = "0.2.1"
+version = "0.3.0"
 dependencies = [
  "bevy",
  "nom",
@@ -776,7 +776,7 @@ dependencies = [
 
 [[package]]
 name = "bevy_hui_widgets"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "bevy",
  "bevy_hui",
