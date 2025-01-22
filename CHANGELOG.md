@@ -1,3 +1,8 @@
+# 0.3.0
+
+- new atlas & sprite animation system.
+- multiple minor bug fixes
+
 # 0.2.0
 
 - added support for `overflow_clip_margin`
