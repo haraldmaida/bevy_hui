@@ -119,6 +119,7 @@ fn continues_interaction_checking(
 pub struct UiStyleQuery<'w, 's> {
     pub server: Res<'w, AssetServer>,
     pub node: Query<'w, 's, &'static mut Node>,
+    pub image: Query<'w, 's, &'static mut ImageNode>,
     pub text_fonts: Query<'w, 's, &'static mut TextFont>,
     pub text_colors: Query<'w, 's, &'static mut TextColor>,
     pub background: Query<'w, 's, &'static mut BackgroundColor>,
@@ -132,6 +133,10 @@ impl<'w, 's> UiStyleQuery<'w, 's> {
     pub fn apply_computed(&mut self, entity: Entity, computed: &ComputedStyle) {
         _ = self.node.get_mut(entity).map(|mut node| {
             node.clone_from(&computed.node);
+        });
+
+        _ = self.image.get_mut(entity).map(|mut image| {
+            image.color = computed.color;
         });
 
         _ = self.text_fonts.get_mut(entity).map(|mut font| {
@@ -218,6 +223,12 @@ impl<'w, 's> UiStyleQuery<'w, 's> {
                         line.color = lerp_color(&regular.color, &outline.color, ratio);
                     });
                 }
+            }
+            StyleAttr::Color(color) => {
+                _ = self
+                    .image
+                    .get_mut(entity)
+                    .map(|mut image| image.color = lerp_color(&computed.color, color, ratio));
             }
             StyleAttr::Border(ui_rect) => {
                 style.border = lerp_rect(&computed.node.border, ui_rect, ratio)
@@ -395,6 +406,7 @@ impl HoverTimer {
 #[reflect]
 pub struct ComputedStyle {
     pub node: Node,
+    pub color: Color,
     pub border_color: Color,
     pub border_radius: UiRect,
     pub image_mode: Option<NodeImageMode>,
@@ -421,6 +433,7 @@ impl Default for ComputedStyle {
     fn default() -> Self {
         Self {
             node: Node::default(),
+            color: Color::WHITE,
             border_color: Color::NONE,
             border_radius: UiRect::default(),
             background: Color::NONE,
@@ -531,6 +544,7 @@ impl HtmlStyle {
             StyleAttr::JustifyContent(justify_content) => {
                 self.computed.node.justify_content = justify_content
             }
+            StyleAttr::Color(color) => self.computed.color = color,
             StyleAttr::Zindex(index) => self.computed.zindex = Some(index),
             StyleAttr::GlobalZIndex(index) => self.computed.global_zindex = Some(index),
             StyleAttr::Margin(ui_rect) => self.computed.node.margin = ui_rect,
