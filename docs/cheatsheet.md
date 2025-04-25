@@ -58,6 +58,7 @@
 | shadow_blur           | ref `Val`                                                                                                |
 | shadow_spread         | ref `Val`                                                                                                |
 | shadow_offset         | ref `Val` `Val` shadow_offset="10px 10px"                                                                |
+| text_shadow           | `(2,1) #000` ref `Vec2 Color`                                                                   |
 | font                  | asset path                                                                                               |
 | font_color            | ref `Color`                                                                                              |
 | font_size             | float                                                                                                    |

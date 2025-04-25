@@ -11,7 +11,7 @@ use bevy::ui::{
     AlignContent, AlignItems, AlignSelf, Display, FlexDirection, FlexWrap, GlobalZIndex,
     GridAutoFlow, GridPlacement, GridTrack, JustifyContent, JustifyItems, JustifySelf, Outline,
     Overflow, OverflowAxis, OverflowClipBox, OverflowClipMargin, PositionType, RepeatedGridTrack,
-    ZIndex,
+    TextShadow, ZIndex,
 };
 use bevy::{
     color::Color,
@@ -466,6 +466,7 @@ where
         b"shadow_offset" => map(tuple((parse_val,preceded(multispace0,parse_val))),|(x,y)| StyleAttr::ShadowOffset(x,y))(value)?,
         b"shadow_blur" => map(parse_val, StyleAttr::ShadowBlur)(value)?,
         b"shadow_spread" => map(parse_val, StyleAttr::ShadowSpread)(value)?,
+        b"text_shadow" => map(parse_text_shadow, StyleAttr::TextShadow)(value)?,
 
         //animation
         b"atlas" => map(parse_atlas, StyleAttr::Atlas)(value)?,
@@ -613,6 +614,19 @@ where
     )(input)?;
 
     Ok((input, Overflow { x, y }))
+}
+
+fn parse_text_shadow<'a, E>(input: &'a [u8]) -> IResult<&'a [u8], TextShadow, E>
+where
+    E: ParseError<&'a [u8]> + ContextError<&'a [u8]>,
+{
+    map(
+        tuple((parse_vec2, preceded(multispace0, parse_color))),
+        |(o, c)| TextShadow {
+            offset: o,
+            color: c,
+        },
+    )(input)
 }
 
 fn parse_overflow_axis<'a, E>(input: &'a [u8]) -> IResult<&'a [u8], OverflowAxis, E>

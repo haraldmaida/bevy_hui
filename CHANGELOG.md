@@ -1,3 +1,9 @@
+# 0.4
+
+- updated to bevy 0.16
+- new shadow styles for text shadow
+- new full rect image border rules.
+
 # 0.3.0
 
 - new atlas & sprite animation system.

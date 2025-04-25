@@ -436,6 +436,10 @@ impl<'w, 's> TemplateBuilder<'w, 's> {
             self.cmd.entity(entity).insert(shadow.clone());
         }
 
+        if let Some(shadow) = styles.computed.text_shadow.as_ref() {
+            self.cmd.entity(entity).insert(shadow.clone());
+        }
+
         if entity != self.scope {
             self.cmd.entity(entity).insert(TemplateScope(self.scope));
         }
