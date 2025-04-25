@@ -118,7 +118,7 @@ fn init_slider(
         .map(|children| {
             children
                 .iter()
-                .find_map(|child| buttons.get(*child).ok().map(|_| *child))
+                .find_map(|child| buttons.get(child).ok().map(|_| child))
         })
         .flatten()
     else {

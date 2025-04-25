@@ -34,7 +34,7 @@ fn compile_text(
     root: Query<(&HtmlNode, &TemplateProperties)>,
     templates: Res<Assets<HtmlTemplate>>,
 ) {
-    let entity = trigger.entity();
+    let entity = trigger.target();
     let Ok((content_id, scope, mut text)) = nodes.get_mut(entity) else {
         warn!("trying to compile content for {entity}, that does not have any");
         return;
@@ -69,7 +69,7 @@ fn compile_node(
     contexts: Query<&TemplateProperties>,
     server: Res<AssetServer>,
 ) {
-    let entity = trigger.entity();
+    let entity = trigger.target();
     let Ok((mut node_style, scope)) = nodes.get_mut(entity) else {
         // unbuild nodes also complain
         // warn!("Trying to compile a non ui node");
@@ -132,7 +132,7 @@ fn compile_context(
     mut properties: Query<&mut TemplateProperties>,
     mut cmd: Commands,
 ) {
-    let entity = trigger.entity();
+    let entity = trigger.target();
     if let Ok((expressions, scope)) = expressions.get(entity) {
         // ----------
         // problem: compiling props on template root nodes

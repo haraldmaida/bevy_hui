@@ -64,7 +64,7 @@ fn init_select(
 
     _ = children.get(**option_holder).map(|children| {
         children.iter().for_each(|option| {
-            cmd.entity(*option).insert(SelectOption { select: entity });
+            cmd.entity(option).insert(SelectOption { select: entity });
         });
     });
 }
@@ -89,7 +89,7 @@ fn open_list(
 
 fn selection(
     mut events: EventWriter<SelectionChangedEvent>,
-    options: Query<(Entity, &Parent, &Interaction, &SelectOption), Changed<Interaction>>,
+    options: Query<(Entity, &ChildOf, &Interaction, &SelectOption), Changed<Interaction>>,
     mut styles: Query<&mut HtmlStyle>,
 ) {
     for (entity, parent, interaction, option) in options.iter() {
@@ -97,13 +97,13 @@ fn selection(
             continue;
         }
 
-        events.send(SelectionChangedEvent {
+        events.write(SelectionChangedEvent {
             select: option.select,
             option: entity,
         });
 
         // close the list
-        _ = styles.get_mut(**parent).map(|mut style| {
+        _ = styles.get_mut(parent.parent()).map(|mut style| {
             style.computed.node.display = Display::None;
         });
     }
@@ -123,11 +123,11 @@ fn update_selection(
             .map(|children| {
                 children
                     .iter()
-                    .filter(|child| texts.get(**child).is_ok())
+                    .filter(|child| texts.get(*child).is_ok())
                     .next()
             })
             .flatten()
-            .map(|c| texts.get_mut(*c).ok())
+            .map(|c| texts.get_mut(c).ok())
             .flatten()
         else {
             continue;

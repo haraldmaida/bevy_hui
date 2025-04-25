@@ -2,9 +2,9 @@ use crate::animation::{AnimationDirection, Atlas};
 use crate::prelude::*;
 use crate::util::{SlotId, SlotMap};
 use bevy::ecs::system::EntityCommands;
+use bevy::platform::collections::HashMap;
 use bevy::prelude::*;
 use bevy::ui::widget::NodeImageMode;
-use bevy::utils::HashMap;
 
 #[derive(Debug, Default, Reflect)]
 #[reflect]

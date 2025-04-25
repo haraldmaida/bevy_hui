@@ -3,13 +3,16 @@ use crate::data::{Action, AttrTokens, Attribute, HtmlTemplate, StyleAttr, XNode}
 use crate::prelude::NodeType;
 use crate::util::SlotMap;
 use bevy::math::{Rect, UVec2, Vec2};
+use bevy::platform::collections::HashMap;
 use bevy::prelude::EaseFunction;
 use bevy::sprite::{BorderRect, SliceScaleMode, TextureSlicer};
 use bevy::ui::widget::NodeImageMode;
 use bevy::ui::{
-    AlignContent, AlignItems, AlignSelf, Display, FlexDirection, FlexWrap, GlobalZIndex, GridAutoFlow, GridPlacement, GridTrack, JustifyContent, JustifyItems, JustifySelf, Outline, Overflow, OverflowAxis, OverflowClipBox, OverflowClipMargin, PositionType, RepeatedGridTrack, ZIndex
+    AlignContent, AlignItems, AlignSelf, Display, FlexDirection, FlexWrap, GlobalZIndex,
+    GridAutoFlow, GridPlacement, GridTrack, JustifyContent, JustifyItems, JustifySelf, Outline,
+    Overflow, OverflowAxis, OverflowClipBox, OverflowClipMargin, PositionType, RepeatedGridTrack,
+    ZIndex,
 };
-use bevy::utils::HashMap;
 use bevy::{
     color::Color,
     ui::{UiRect, Val},
@@ -17,7 +20,7 @@ use bevy::{
 use nom::{
     branch::alt,
     bytes::complete::{is_not, tag, take_until, take_while, take_while1, take_while_m_n},
-    character::complete::{multispace0, char},
+    character::complete::{char, multispace0},
     combinator::{complete, map, map_parser, not, rest},
     error::{context, ContextError, ErrorKind, ParseError},
     multi::{many0, separated_list1},
@@ -829,8 +832,12 @@ where
         alt((
             map(tag("forward"), |_| AnimationDirection::Forward),
             map(tag("reverse"), |_| AnimationDirection::Reverse),
-            map(tag("alternate_forward"), |_| AnimationDirection::AlternateForward),
-            map(tag("alternate_reverse"), |_| AnimationDirection::AlternateReverse),
+            map(tag("alternate_forward"), |_| {
+                AnimationDirection::AlternateForward
+            }),
+            map(tag("alternate_reverse"), |_| {
+                AnimationDirection::AlternateReverse
+            }),
         )),
     )(input)
 }
@@ -843,16 +850,11 @@ where
         "dimension has no valid value. Try `(32, 32)` or `32`",
         alt((
             // (10, 10)
-            complete(map(
-                preceded(multispace0, parse_uvec2),
-                |val| val,
-            )),
+            complete(map(preceded(multispace0, parse_uvec2), |val| val)),
             // 10
-            complete(map(
-                preceded(multispace0, parse_number),
-                |val| UVec2::new(val as u32, val as u32),
-            )),
-            
+            complete(map(preceded(multispace0, parse_number), |val| {
+                UVec2::new(val as u32, val as u32)
+            })),
         )),
     )(input)
 }
@@ -864,74 +866,74 @@ where
     context(
         "image_atlas has no valid value. Try `(32, 32) 1 7 p(0, 0) o(0, 0)`",
         alt((
-            complete(
-                map(
-                    tuple((
-                        preceded(multispace0, parse_dimensions),
-                        preceded(multispace0, parse_number),
-                        preceded(multispace0, parse_number),
-                        preceded(tuple((multispace0, char('p'))), parse_dimensions),
-                        preceded(tuple((multispace0, char('o'))), parse_dimensions),
-                    )),
-                    |(size, columns, rows, padding, offset)| Some(Atlas {
+            complete(map(
+                tuple((
+                    preceded(multispace0, parse_dimensions),
+                    preceded(multispace0, parse_number),
+                    preceded(multispace0, parse_number),
+                    preceded(tuple((multispace0, char('p'))), parse_dimensions),
+                    preceded(tuple((multispace0, char('o'))), parse_dimensions),
+                )),
+                |(size, columns, rows, padding, offset)| {
+                    Some(Atlas {
                         size: size,
                         columns: columns as u32,
                         rows: rows as u32,
                         padding: Some(padding),
                         offset: Some(offset),
-                    }),
-                )
-            ),
-            complete(
-                map(
-                    tuple((
-                        preceded(multispace0, parse_dimensions),
-                        preceded(multispace0, parse_number),
-                        preceded(multispace0, parse_number),
-                        preceded(tuple((multispace0, char('p'))), parse_dimensions)
-                    )),
-                    |(size, columns, rows, padding)| Some(Atlas {
+                    })
+                },
+            )),
+            complete(map(
+                tuple((
+                    preceded(multispace0, parse_dimensions),
+                    preceded(multispace0, parse_number),
+                    preceded(multispace0, parse_number),
+                    preceded(tuple((multispace0, char('p'))), parse_dimensions),
+                )),
+                |(size, columns, rows, padding)| {
+                    Some(Atlas {
                         size: size,
                         columns: columns as u32,
                         rows: rows as u32,
                         padding: Some(padding),
                         offset: None,
-                    }),
-                )
-            ),
-            complete(
-                map(
-                    tuple((
-                        preceded(multispace0, parse_dimensions),
-                        preceded(multispace0, parse_number),
-                        preceded(multispace0, parse_number),
-                        preceded(tuple((multispace0, char('o'))), parse_dimensions)
-                    )),
-                    |(size, columns, rows, offset)| Some(Atlas {
+                    })
+                },
+            )),
+            complete(map(
+                tuple((
+                    preceded(multispace0, parse_dimensions),
+                    preceded(multispace0, parse_number),
+                    preceded(multispace0, parse_number),
+                    preceded(tuple((multispace0, char('o'))), parse_dimensions),
+                )),
+                |(size, columns, rows, offset)| {
+                    Some(Atlas {
                         size: size,
                         columns: columns as u32,
                         rows: rows as u32,
                         padding: None,
                         offset: Some(offset),
-                    }),
-                )
-            ),
-            complete(
-                map(
-                    tuple((
-                        preceded(multispace0, parse_dimensions),
-                        preceded(multispace0, parse_number),
-                        preceded(multispace0, parse_number),
-                    )),
-                    |(size, columns, rows)| Some(Atlas {
+                    })
+                },
+            )),
+            complete(map(
+                tuple((
+                    preceded(multispace0, parse_dimensions),
+                    preceded(multispace0, parse_number),
+                    preceded(multispace0, parse_number),
+                )),
+                |(size, columns, rows)| {
+                    Some(Atlas {
                         size: size,
                         columns: columns as u32,
                         rows: rows as u32,
                         padding: None,
                         offset: None,
-                    }),
-                )
-            ),
+                    })
+                },
+            )),
         )),
     )(input)
 }
@@ -1114,11 +1116,11 @@ where
                     preceded(multispace0, parse_px),
                     preceded(multispace0, parse_px),
                 )),
-                |(x, y)| BorderRect::rectangle(x, y),
+                |(x, y)| BorderRect::axes(x, y),
             )),
             // 10px
             complete(map(preceded(multispace0, parse_px), |all| {
-                BorderRect::square(all)
+                BorderRect::all(all)
             })),
         )),
     )(input)
@@ -1852,8 +1854,8 @@ mod tests {
         }
     }
 
-    #[test_case("10px" => Some(BorderRect::square(10.0)); "all sides")]
-    #[test_case("1px 2px" => Some(BorderRect::rectangle(1.0, 2.0)); "axis")]
+    #[test_case("10px" => Some(BorderRect::all(10.0)); "all sides")]
+    #[test_case("1px 2px" => Some(BorderRect::axes(1.0, 2.0)); "axis")]
     #[test_case("1px 2px 3px 4px" => Some(BorderRect::from([4.0, 2.0, 1.0, 3.0])); "individual sides")]
     // Invalid formats include any attempts to use a non-pixel unit type:
     #[test_case("10vmax 10%" => None)]
@@ -1861,7 +1863,8 @@ mod tests {
     #[test_case("10vh 40px 5px 13%" => None)]
     fn test_parse_border_rect(input: &str) -> Option<BorderRect> {
         parse_border_rect::<VerboseError<_>>(input.as_bytes())
-            .map(|(_, border)| border).ok()
+            .map(|(_, border)| border)
+            .ok()
     }
 
     #[test_case(r#"10px stretch stretch 1"#)]

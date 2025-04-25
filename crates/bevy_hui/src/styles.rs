@@ -1,4 +1,8 @@
-use crate::{animation::{AnimationDirection, Atlas}, build::InteractionObverser, data::StyleAttr};
+use crate::{
+    animation::{AnimationDirection, Atlas},
+    build::InteractionObverser,
+    data::StyleAttr,
+};
 use bevy::{
     ecs::{query::QueryEntityError, system::SystemParam},
     prelude::*,
@@ -159,9 +163,9 @@ impl<'w, 's> UiStyleQuery<'w, 's> {
             radius.bottom_left = computed.border_radius.left;
         });
 
-        if let Some(computed_shadow) = computed.shadow {
+        if let Some(computed_shadow) = computed.shadow.as_ref() {
             _ = self.shadow.get_mut(entity).map(|mut shadow| {
-                *shadow = computed_shadow;
+                *shadow = computed_shadow.clone();
             });
         }
 
@@ -292,32 +296,33 @@ impl<'w, 's> UiStyleQuery<'w, 's> {
                 });
             }
             StyleAttr::ShadowColor(color) => {
-                if let Some(computed_shadow) = computed.shadow {
+                if let Some(computed_shadow) = computed.shadow.as_ref() {
                     _ = self.shadow.get_mut(entity).map(|mut shadow| {
-                        shadow.color = lerp_color(&computed_shadow.color, color, ratio)
+                        shadow[0].color = lerp_color(&computed_shadow[0].color, color, ratio)
                     });
                 }
             }
             StyleAttr::ShadowOffset(x, y) => {
-                if let Some(computed_shadow) = computed.shadow {
+                if let Some(computed_shadow) = computed.shadow.as_ref() {
                     _ = self.shadow.get_mut(entity).map(|mut shadow| {
-                        shadow.x_offset = lerp_val(&computed_shadow.x_offset, x, ratio);
-                        shadow.y_offset = lerp_val(&computed_shadow.y_offset, y, ratio);
+                        shadow[0].x_offset = lerp_val(&computed_shadow[0].x_offset, x, ratio);
+                        shadow[0].y_offset = lerp_val(&computed_shadow[0].y_offset, y, ratio);
                     });
                 }
             }
             StyleAttr::ShadowBlur(blur) => {
-                if let Some(computed_shadow) = computed.shadow {
+                if let Some(computed_shadow) = computed.shadow.as_ref() {
                     _ = self.shadow.get_mut(entity).map(|mut shadow| {
-                        shadow.blur_radius = lerp_val(&computed_shadow.blur_radius, blur, ratio);
+                        shadow[0].blur_radius =
+                            lerp_val(&computed_shadow[0].blur_radius, blur, ratio);
                     });
                 }
             }
             StyleAttr::ShadowSpread(spread) => {
-                if let Some(computed_shadow) = computed.shadow {
+                if let Some(computed_shadow) = computed.shadow.as_ref() {
                     _ = self.shadow.get_mut(entity).map(|mut shadow| {
-                        shadow.spread_radius =
-                            lerp_val(&computed_shadow.spread_radius, spread, ratio);
+                        shadow[0].spread_radius =
+                            lerp_val(&computed_shadow[0].spread_radius, spread, ratio);
                     });
                 }
             }
@@ -588,40 +593,54 @@ impl HtmlStyle {
             StyleAttr::Outline(outline) => self.computed.outline = Some(outline),
 
             StyleAttr::ShadowSpread(spread_radius) => match self.computed.shadow.as_mut() {
-                Some(shadow) => shadow.spread_radius = spread_radius,
+                Some(shadow) => shadow[0].spread_radius = spread_radius,
                 None => {
-                    self.computed.shadow = Some(BoxShadow {
+                    self.computed.shadow = Some(BoxShadow::new(
+                        Color::default(),
+                        Val::default(),
+                        Val::default(),
                         spread_radius,
-                        ..default()
-                    })
+                        Val::default(),
+                    ));
                 }
             },
             StyleAttr::ShadowBlur(blur_radius) => match self.computed.shadow.as_mut() {
-                Some(shadow) => shadow.blur_radius = blur_radius,
+                Some(shadow) => shadow[0].blur_radius = blur_radius,
                 None => {
-                    self.computed.shadow = Some(BoxShadow {
+                    self.computed.shadow = Some(BoxShadow::new(
+                        Color::default(),
+                        Val::default(),
+                        Val::default(),
+                        Val::default(),
                         blur_radius,
-                        ..default()
-                    });
+                    ));
                 }
             },
             StyleAttr::ShadowColor(color) => match self.computed.shadow.as_mut() {
-                Some(shadow) => shadow.color = color,
+                Some(shadow) => shadow[0].color = color,
                 None => {
-                    self.computed.shadow = Some(BoxShadow { color, ..default() });
+                    self.computed.shadow = Some(BoxShadow::new(
+                        color,
+                        Val::default(),
+                        Val::default(),
+                        Val::default(),
+                        Val::default(),
+                    ));
                 }
             },
             StyleAttr::ShadowOffset(x, y) => match self.computed.shadow.as_mut() {
                 Some(shadow) => {
-                    shadow.x_offset = x;
-                    shadow.y_offset = y;
+                    shadow[0].x_offset = x;
+                    shadow[0].y_offset = y;
                 }
                 None => {
-                    self.computed.shadow = Some(BoxShadow {
-                        x_offset: x,
-                        y_offset: y,
-                        ..default()
-                    });
+                    self.computed.shadow = Some(BoxShadow::new(
+                        Color::default(),
+                        x,
+                        y,
+                        Val::default(),
+                        Val::default(),
+                    ));
                 }
             },
             // StyleAttr::Font(font) => self.regular.font = server

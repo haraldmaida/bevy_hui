@@ -1,8 +1,6 @@
 use crate::{build::HtmlNode, data::HtmlTemplate};
 use bevy::{
-    ecs::system::{EntityCommands, SystemId, SystemParam},
-    prelude::*,
-    utils::HashMap,
+    ecs::system::{EntityCommands, SystemId, SystemParam}, platform::collections::HashMap, prelude::*
 };
 
 pub struct BindingPlugin;
@@ -128,7 +126,7 @@ impl FunctionBindings {
     pub fn maybe_run(&self, key: &String, entity: Entity, cmd: &mut Commands) {
         self.get(key)
             .map(|id| {
-                cmd.run_system_with_input(*id, entity);
+                cmd.run_system_with(*id, entity);
             })
             .unwrap_or_else(|| warn!("function `{key}` is not bound"));
     }
@@ -192,7 +190,7 @@ fn observe_node_changed(
     on_change: Query<&crate::prelude::OnUiChange>,
     function_bindings: Res<FunctionBindings>,
 ) {
-    let entity = trigger.entity();
+    let entity = trigger.target();
 
     let Ok(funcs) = on_change.get(entity) else {
         return;
