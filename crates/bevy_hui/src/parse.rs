@@ -941,8 +941,8 @@ fn parse_image_slice<'a, E>(input: &'a [u8]) -> IResult<&'a [u8], NodeImageMode,
 where
     E: ParseError<&'a [u8]> + ContextError<&'a [u8]>,
 {
-    let (input, (val, x, y, s)) = tuple((
-        preceded(multispace0, parse_px),
+    let (input, (border, x, y, s)) = tuple((
+        preceded(multispace0, parse_border_rect),
         preceded(multispace0, parse_slice_scale),
         preceded(multispace0, parse_slice_scale),
         preceded(multispace0, parse_float),
@@ -951,7 +951,7 @@ where
     Ok((
         input,
         NodeImageMode::Sliced(TextureSlicer {
-            border: BorderRect::square(val),
+            border,
             center_scale_mode: x,
             sides_scale_mode: y,
             max_corner_scale: s,
@@ -1039,7 +1039,7 @@ where
     )(input)
 }
 
-/// convert string values to uirect
+/// convert string values to [UiRect]
 /// 20px/% single
 /// 10px/% 10px axis
 /// 10px 10px 10px 10px rect
@@ -1076,6 +1076,49 @@ where
             // 10px
             complete(map(preceded(multispace0, parse_val), |all| {
                 UiRect::all(all)
+            })),
+        )),
+    )(input)
+}
+
+/// Convert string values to [BorderRect]
+/// Valid options:
+/// - 10px - all sides
+/// - 10px 10px - horizontal vertical
+/// - 10px 10px 10px 10px - top right bottom left
+fn parse_border_rect<'a, E>(input: &'a [u8]) -> IResult<&'a [u8], BorderRect, E>
+where
+    E: ParseError<&'a [u8]> + ContextError<&'a [u8]>,
+{
+    context(
+        "is not a valid `BorderRect`, try  all:`10px` axis:`10px 10px` full: `10px 10px 10px 10px`",
+        alt((
+            // 10px 10px 10px 10px
+            complete(map(
+                tuple((
+                    preceded(multispace0, parse_px),
+                    preceded(multispace0, parse_px),
+                    preceded(multispace0, parse_px),
+                    preceded(multispace0, parse_px),
+                )),
+                |(top, right, bottom, left)| BorderRect {
+                    left,
+                    right,
+                    top,
+                    bottom,
+                },
+            )),
+            // 10px 10px
+            complete(map(
+                tuple((
+                    preceded(multispace0, parse_px),
+                    preceded(multispace0, parse_px),
+                )),
+                |(x, y)| BorderRect::rectangle(x, y),
+            )),
+            // 10px
+            complete(map(preceded(multispace0, parse_px), |all| {
+                BorderRect::square(all)
             })),
         )),
     )(input)
@@ -1807,6 +1850,18 @@ mod tests {
                 assert!(false, "");
             }
         }
+    }
+
+    #[test_case("10px" => Some(BorderRect::square(10.0)); "all sides")]
+    #[test_case("1px 2px" => Some(BorderRect::rectangle(1.0, 2.0)); "axis")]
+    #[test_case("1px 2px 3px 4px" => Some(BorderRect::from([4.0, 2.0, 1.0, 3.0])); "individual sides")]
+    // Invalid formats include any attempts to use a non-pixel unit type:
+    #[test_case("10vmax 10%" => None)]
+    #[test_case("100vw" => None)]
+    #[test_case("10vh 40px 5px 13%" => None)]
+    fn test_parse_border_rect(input: &str) -> Option<BorderRect> {
+        parse_border_rect::<VerboseError<_>>(input.as_bytes())
+            .map(|(_, border)| border).ok()
     }
 
     #[test_case(r#"10px stretch stretch 1"#)]
