@@ -23,6 +23,7 @@ bevy = { version = "0.16", default-features = false, features = [
   "bevy_asset",
   "bevy_state",
   "bevy_text",
+  "bevy_log",
 ] }
 thiserror = "1.0.63"
 nom = "7.1.3"
