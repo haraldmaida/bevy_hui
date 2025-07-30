@@ -9,12 +9,13 @@ fn main() {
         .run();
 }
 
-fn setup(mut cmd: Commands, mut templates: ResMut<Assets<HtmlTemplate>>) {
+fn setup(mut cmd: Commands, mut templates: ResMut<Assets<HtmlTemplate>>, server: Res<AssetServer>) {
     cmd.spawn(Camera2d);
 
     let html = greet_button("Maud").render();
 
-    let template = match parse_template::<VerboseHtmlError>(html.0.as_bytes(), /* loader */) {
+    let mut loader = AssetServerAdaptor { server: &server };
+    let template = match parse_template::<VerboseHtmlError>(html.0.as_bytes(), &mut loader) {
         Ok((_, template)) => template,
         Err(err) => {
             let e = err.map(|e| e.format(html.0.as_bytes(), "maud"));
