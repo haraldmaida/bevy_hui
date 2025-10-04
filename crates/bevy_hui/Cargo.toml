@@ -18,21 +18,21 @@ opt-level = 3
 
 [dependencies]
 bevy = { version = "0.16", default-features = false, features = [
-  "bevy_render",
-  "bevy_ui",
-  "bevy_asset",
-  "bevy_state",
-  "bevy_text",
-  "bevy_log",
+    "bevy_render",
+    "bevy_ui",
+    "bevy_asset",
+    "bevy_state",
+    "bevy_text",
+    "bevy_log",
 ] }
 bevy_picking = { version = "0.16", optional = true }
-thiserror = "1.0.63"
-nom = "7.1.3"
-owo-colors = "4.1.0"
+thiserror = "1"
+nom = "7"
+owo-colors = "4"
 
 [features]
 picking = ["dep:bevy_picking"]
 default = []
 
 [dev-dependencies]
-test-case = "3.3.1"
+test-case = "3"
