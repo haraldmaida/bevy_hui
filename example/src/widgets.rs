@@ -13,7 +13,10 @@ fn main() {
             HuiInputWidgetPlugin,
             HuiSelectWidgetPlugin,
         ))
-        .add_systems(Startup, (register_widgets, setup_scene, register_user_functions))
+        .add_systems(
+            Startup,
+            (register_widgets, setup_scene, register_user_functions),
+        )
         .add_systems(Update, update_slider_target_text)
         .run();
 }
@@ -68,12 +71,12 @@ fn register_user_functions(mut html_funcs: HtmlFunctions) {
 // -----------------
 // example, custom user extension, update a value display of a slider
 fn update_slider_target_text(
-    mut events: EventReader<SliderChangedEvent>,
+    mut messages: MessageReader<SliderChangedEvent>,
     targets: Query<&UiTarget>,
     mut texts: Query<&mut Text>,
 ) {
-    for event in events.read() {
-        let Ok(target) = targets.get(event.slider) else {
+    for message in messages.read() {
+        let Ok(target) = targets.get(message.slider) else {
             continue;
         };
 
@@ -81,6 +84,6 @@ fn update_slider_target_text(
             continue;
         };
 
-        text.0 = format!("{:.2}", event.value);
+        text.0 = format!("{:.2}", message.value);
     }
 }

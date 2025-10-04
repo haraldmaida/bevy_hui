@@ -8,13 +8,13 @@ use bevy::math::{Rect, UVec2, Vec2};
 use bevy::platform::collections::HashMap;
 use bevy::prelude::EaseFunction;
 use bevy::sprite::{BorderRect, SliceScaleMode, TextureSlicer};
-use bevy::text::{JustifyText, LineBreak, TextLayout};
-use bevy::ui::widget::NodeImageMode;
+use bevy::text::{Justify, LineBreak, TextLayout};
+use bevy::ui::widget::{NodeImageMode, TextShadow};
 use bevy::ui::{
     AlignContent, AlignItems, AlignSelf, Display, FlexDirection, FlexWrap, GlobalZIndex,
     GridAutoFlow, GridPlacement, GridTrack, JustifyContent, JustifyItems, JustifySelf, Outline,
     Overflow, OverflowAxis, OverflowClipBox, OverflowClipMargin, PositionType, RepeatedGridTrack,
-    TextShadow, ZIndex,
+    ZIndex,
 };
 use bevy::{
     color::Color,
@@ -1569,17 +1569,17 @@ where
     Ok((input, TextLayout::new(justify, linebreak)))
 }
 
-fn parse_justify_text<'a, E>(input: &'a [u8]) -> IResult<&'a [u8], JustifyText, E>
+fn parse_justify_text<'a, E>(input: &'a [u8]) -> IResult<&'a [u8], Justify, E>
 where
     E: ParseError<&'a [u8]> + ContextError<&'a [u8]>,
 {
     context(
         "is not a valid justify text",
         alt((
-            map(tag("left"), |_| JustifyText::Left),
-            map(tag("center"), |_| JustifyText::Center),
-            map(tag("justified"), |_| JustifyText::Justified),
-            map(tag("right"), |_| JustifyText::Right),
+            map(tag("left"), |_| Justify::Left),
+            map(tag("center"), |_| Justify::Center),
+            map(tag("justified"), |_| Justify::Justified),
+            map(tag("right"), |_| Justify::Right),
         )),
     )(input)
 }
