@@ -3,7 +3,6 @@ use crate::animation::{AnimationDirection, Atlas};
 use crate::data::{Action, AttrTokens, Attribute, FontReference, HtmlTemplate, StyleAttr, XNode};
 use crate::prelude::NodeType;
 use crate::util::SlotMap;
-use bevy::log::info;
 use bevy::math::{Rect, UVec2, Vec2};
 use bevy::platform::collections::HashMap;
 use bevy::prelude::EaseFunction;

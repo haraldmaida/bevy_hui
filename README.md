@@ -17,14 +17,15 @@ https://github.com/user-attachments/assets/4eb22305-7762-404e-9093-806b6a155ede
 - No widgets, no themes. Just bevy UI serialized with all the tools necessary to build anything
   in a reusable manor.
 - Optional `bevy_picking` support: `picking`
-```
+
+```toml
 features = ["picking"]
 ```
 
 ## Compatibility
 
 | bevy | bevy_hui |
-| ---: | -------: |
+|-----:|---------:|
 | 0.16 |      0.4 |
 | 0.15 |      0.3 |
 
@@ -32,7 +33,7 @@ features = ["picking"]
 
 Like most crates, don't forget to register the plugin!
 
-```rust
+```rust,ignore
 app.add_plugins((
     HuiPlugin,
     // Optional auto loading. Any template this folder will register as custom component
@@ -56,27 +57,27 @@ Create your first component template with external properties!
 
     <node padding="10px">
         <button
-            id="button"
-            padding="5px"
-            background="{primary}"
-            border_color="{primary}"
-            delay="0.2s"
-            ease="cubic_in"
-            height="80px"
-            width="210px"
-            border="10px"
-            border_radius="30px"
-            hover:height="100px"
-            hover:background="{secondary}"
-            hover:border_color="{secondary}"
-            hover:width="230px"
-            on_press="{action}"
+                id="button"
+                padding="5px"
+                background="{primary}"
+                border_color="{primary}"
+                delay="0.2s"
+                ease="cubic_in"
+                height="80px"
+                width="210px"
+                border="10px"
+                border_radius="30px"
+                hover:height="100px"
+                hover:background="{secondary}"
+                hover:border_color="{secondary}"
+                hover:width="230px"
+                on_press="{action}"
         >
             <text
-                watch="button"
-                font_size="20"
-                font_color="#FFF"
-                hover:font_color="#752"
+                    watch="button"
+                    font_size="20"
+                    font_color="#FFF"
+                    hover:font_color="#752"
             >
                 {text}
             </text>
@@ -91,9 +92,23 @@ To use your new component in any other templates, we have to register it first.
 You can either use the `HuiAutoLoadPlugin` feature (experimental), which
 is great for simple components or register the component yourself in a startup system.
 
-This also allows for custom spawning functions. With is great if you need to add custom components as well!
+This also allows for custom spawning functions. With is great if you need to add custom components
+as well!
 
 ```rust
+# use bevy::prelude::*;
+# use bevy_hui::prelude::*;
+
+#[derive(States, Debug, Clone, Copy, PartialEq, Eq, Hash)]
+enum GameState {
+    Menu,
+    Play,
+    Pause,
+}
+
+#[derive(Component)]
+struct MyCustomComponent;
+
 fn startup(
     server: Res<AssetServer>,
     mut html_comps: HtmlComponents,
@@ -105,12 +120,12 @@ fn startup(
     // advanced register, with spawn functions
     html_comps.register_with_spawn_fn("my_button", server.load("my_button.html"), |mut entity_commands| {
         entity_commands.insert(MyCustomComponent);
-    })
+    });
 
     // create a system binding that will change the game state.
     // any (one-shot) system with `In<Entity>` is valid!
     // the entity represents the node, the function is called on
-    html_funcs.register("start_game", |In(entity): In<Entity>, mut state : ResMut<NextState<GameState>> |{
+    html_funcs.register("start_game", |In(entity): In<Entity>, mut state: ResMut<NextState<GameState>>| {
         state.set(GameState::Play);
     });
 }
@@ -126,26 +141,26 @@ Time to be creative. Include your component in the next template.
     <property name="title">My Game</property>
     ...
     <image
-        display="grid"
-        grid_template_columns="(2, auto)"
-        src="ui_panel.png"
-        image_scale_mode="10px tile(1) tile(1) 4"
+            display="grid"
+            grid_template_columns="(2, auto)"
+            src="ui_panel.png"
+            image_scale_mode="10px tile(1) tile(1) 4"
     >
         <my_button
-            text="Start Game"
-            action="start_game"
+                text="Start Game"
+                action="start_game"
         />
         <my_button
-            text="Settings"
-            action="to_settings"
+                text="Settings"
+                action="to_settings"
         />
         <my_button
-            text="Credits"
-            action="to_credits"
+                text="Credits"
+                action="to_credits"
         />
         <my_button
-            text="Exit"
-            action="quit_game"
+                text="Exit"
+                action="quit_game"
         />
     </image>
     ...
@@ -157,11 +172,14 @@ Time to be creative. Include your component in the next template.
 Required components make it super simple.
 
 ```rust
+use bevy::prelude::*;
+use bevy_hui::prelude::*;
+
 fn setup(
     mut cmd: Commands,
     server: Res<AssetServer>,
 ) {
-    cmd.spawn(Camera2dBundle::default());
+    cmd.spawn(Camera2d::default());
     cmd.spawn(HtmlNode(server.load("menu.html")));
 }
 ```
@@ -173,11 +191,14 @@ Experimental widget crate:
 [![Crate](https://img.shields.io/crates/v/bevy_hui.svg)](https://crates.io/crates/bevy_hui_widgets)
 
 In addition to the base crate there is also the `bevy_hui_widgets` crate. It offers some basic
-widgets functionality without providing a template. Each Widget requires some kind of setup/hierarchy
-to work, but the user is in full control over the Template and can style and extend it however they see
+widgets functionality without providing a template. Each Widget requires some kind of
+setup/hierarchy
+to work, but the user is in full control over the Template and can style and extend it however they
+see
 fit.
 
-Imagine html `<select>`, but you provide the template and style of the underlying buttons and containers.
+Imagine html `<select>`, but you provide the template and style of the underlying buttons and
+containers.
 Checkout the widget example.
 
 ```bash
