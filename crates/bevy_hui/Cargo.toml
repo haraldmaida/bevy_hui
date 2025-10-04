@@ -10,20 +10,14 @@ license = "MIT OR Apache-2.0"
 readme = "README.md"
 categories = ["game-development"]
 
-[profile.dev]
-opt-level = 1
-
-[profile.dev.package."*"]
-opt-level = 3
-
 [dependencies]
 bevy = { version = "0.16", default-features = false, features = [
-  "bevy_render",
-  "bevy_ui",
-  "bevy_asset",
-  "bevy_state",
-  "bevy_text",
-  "bevy_log",
+    "bevy_render",
+    "bevy_ui",
+    "bevy_asset",
+    "bevy_state",
+    "bevy_text",
+    "bevy_log",
 ] }
 bevy_picking = { version = "0.16", optional = true }
 thiserror = "1.0.63"
