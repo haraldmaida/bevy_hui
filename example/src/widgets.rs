@@ -68,7 +68,7 @@ fn register_user_functions(mut html_funcs: HtmlFunctions) {
 // -----------------
 // example, custom user extension, update a value display of a slider
 fn update_slider_target_text(
-    mut events: EventReader<SliderChangedEvent>,
+    mut events: MessageReader<SliderChangedEvent>,
     targets: Query<&UiTarget>,
     mut texts: Query<&mut Text>,
 ) {

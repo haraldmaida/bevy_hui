@@ -143,8 +143,8 @@ fn init_slider(
 }
 
 fn update_drag(
-    mut slider_events: EventWriter<SliderChangedEvent>,
-    mut events: EventReader<bevy::input::mouse::MouseMotion>,
+    mut slider_events: MessageWriter<SliderChangedEvent>,
+    mut events: MessageReader<bevy::input::mouse::MouseMotion>,
     mut nobs: Query<(Entity, &SliderNob, &mut HtmlStyle, &Interaction)>,
     sliders: Query<&Slider>,
     computed_nodes: Query<&ComputedNode>,

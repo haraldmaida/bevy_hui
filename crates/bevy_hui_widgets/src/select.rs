@@ -88,7 +88,7 @@ fn open_list(
 }
 
 fn selection(
-    mut events: EventWriter<SelectionChangedEvent>,
+    mut events: MessageWriter<SelectionChangedEvent>,
     options: Query<(Entity, &ChildOf, &Interaction, &SelectOption), Changed<Interaction>>,
     mut styles: Query<&mut HtmlStyle>,
 ) {
@@ -111,7 +111,7 @@ fn selection(
 
 fn update_selection(
     mut cmd: Commands,
-    mut events: EventReader<SelectionChangedEvent>,
+    mut events: MessageReader<SelectionChangedEvent>,
     mut texts: Query<&mut Text>,
     children: Query<&Children>,
     tags: Query<&Tags>,

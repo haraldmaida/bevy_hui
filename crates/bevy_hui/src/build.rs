@@ -175,7 +175,7 @@ pub struct HtmlNode(pub Handle<HtmlTemplate>);
 
 fn hotreload(
     mut cmd: Commands,
-    mut events: EventReader<AssetEvent<HtmlTemplate>>,
+    mut events: MessageReader<AssetEvent<HtmlTemplate>>,
     templates: Query<(Entity, &HtmlNode)>,
     sloted_nodes: Query<(Entity, &InsideSlot)>,
 ) {
