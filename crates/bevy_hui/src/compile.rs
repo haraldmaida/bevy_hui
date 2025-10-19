@@ -1,8 +1,11 @@
 use crate::{
-    adaptor::AssetServerAdaptor, build::{
+    adaptor::AssetServerAdaptor,
+    build::{
         ContentId, HtmlNode, Tags, TemplateExpresions, TemplateProperties,
         TemplatePropertySubscriber, TemplateScope,
-    }, data::HtmlTemplate, styles::HtmlStyle
+    },
+    data::HtmlTemplate,
+    styles::HtmlStyle,
 };
 use bevy::prelude::*;
 use nom::{
@@ -14,9 +17,9 @@ use nom::{
 pub struct CompilePlugin;
 impl Plugin for CompilePlugin {
     fn build(&self, app: &mut App) {
-        app.add_event::<CompileNodeEvent>();
-        app.add_event::<CompileContextEvent>();
-        app.add_event::<CompileContentEvent>();
+        // app.add_event::<CompileNodeEvent>();
+        // app.add_event::<CompileContextEvent>();
+        // app.add_event::<CompileContentEvent>();
         app.add_observer(compile_node);
         app.add_observer(compile_context);
         app.add_observer(compile_text);
@@ -24,15 +27,17 @@ impl Plugin for CompilePlugin {
 }
 
 #[derive(Event)]
-pub struct CompileContentEvent;
+pub struct CompileContentEvent {
+    pub entity: Entity,
+}
 
 fn compile_text(
-    trigger: Trigger<CompileContentEvent>,
+    trigger: On<CompileContentEvent>,
     mut nodes: Query<(&ContentId, &TemplateScope, &mut Text)>,
     root: Query<(&HtmlNode, &TemplateProperties)>,
     templates: Res<Assets<HtmlTemplate>>,
 ) {
-    let entity = trigger.target();
+    let entity = trigger.entity;
     let Ok((content_id, scope, mut text)) = nodes.get_mut(entity) else {
         warn!("trying to compile content for {entity}, that does not have any");
         return;
@@ -56,9 +61,12 @@ fn compile_text(
 }
 
 #[derive(Event)]
-pub struct CompileNodeEvent;
+pub struct CompileNodeEvent {
+    pub entity: Entity,
+}
+
 fn compile_node(
-    trigger: Trigger<CompileNodeEvent>,
+    trigger: On<CompileNodeEvent>,
     mut cmd: Commands,
     mut nodes: Query<(&mut HtmlStyle, &TemplateScope)>,
     mut images: Query<&mut ImageNode>,
@@ -67,7 +75,7 @@ fn compile_node(
     contexts: Query<&TemplateProperties>,
     server: Res<AssetServer>,
 ) {
-    let entity = trigger.target();
+    let entity = trigger.entity;
     let Ok((mut node_style, scope)) = nodes.get_mut(entity) else {
         // unbuild nodes also complain
         // warn!("Trying to compile a non ui node");
@@ -121,10 +129,12 @@ fn compile_node(
 }
 
 #[derive(Event)]
-pub struct CompileContextEvent;
+pub struct CompileContextEvent {
+    pub entity: Entity,
+}
 
 fn compile_context(
-    trigger: Trigger<CompileContextEvent>,
+    trigger: On<CompileContextEvent>,
     expressions: Query<(&TemplateExpresions, Option<&TemplateScope>)>,
     text_nodes: Query<(), With<ContentId>>,
     subscriber: Query<&TemplatePropertySubscriber>,
@@ -132,7 +142,7 @@ fn compile_context(
     mut cmd: Commands,
     server: Res<AssetServer>,
 ) {
-    let entity = trigger.target();
+    let entity = trigger.entity;
     if let Ok((expressions, scope)) = expressions.get(entity) {
         // ----------
         // problem: compiling props on template root nodes
@@ -141,9 +151,7 @@ fn compile_context(
 
         // compile
         if let Some(parent_context) = scope.map(|s| properties.get(**s).ok()).flatten() {
-            let mut adapter = AssetServerAdaptor {
-                server: &server,
-            };
+            let mut adapter = AssetServerAdaptor { server: &server };
             let mut compiled_defintions = vec![];
             for expr in expressions.iter() {
                 // --------------------
@@ -185,12 +193,12 @@ fn compile_context(
     if let Ok(subs) = subscriber.get(entity) {
         for sub in subs.iter() {
             if *sub != entity && properties.get(*sub).is_ok() {
-                cmd.trigger_targets(CompileContextEvent, *sub);
+                cmd.trigger(CompileContextEvent { entity: *sub });
             } else {
-                cmd.trigger_targets(CompileNodeEvent, *sub);
+                cmd.trigger(CompileNodeEvent { entity: *sub });
             }
             if text_nodes.get(*sub).is_ok() {
-                cmd.trigger_targets(CompileContentEvent, *sub);
+                cmd.trigger(CompileContentEvent { entity: *sub });
             }
         }
     }

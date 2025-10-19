@@ -1,9 +1,4 @@
-use bevy::{
-    image::ImageSamplerDescriptor,
-    input::mouse::MouseWheel,
-    prelude::*,
-    remote::{http::RemoteHttpPlugin, RemotePlugin},
-};
+use bevy::{image::ImageSamplerDescriptor, input::mouse::MouseWheel, prelude::*};
 use bevy_aseprite_ultra::prelude::*;
 use bevy_hui::prelude::*;
 
@@ -13,8 +8,6 @@ fn main() {
             DefaultPlugins.set(ImagePlugin {
                 default_sampler: ImageSamplerDescriptor::nearest(),
             }),
-            RemotePlugin::default(),
-            RemoteHttpPlugin::default(),
             AsepriteUltraPlugin,
             HuiPlugin,
             HuiAutoLoadPlugin::new(&["components"]),
@@ -37,7 +30,7 @@ fn setup(
     cmd.spawn(Camera2d);
     cmd.spawn((
         HtmlNode(server.load("demo/menu.html")),
-        TemplateProperties::default().with("title", "Test-titleTest-titleTest-titleTest-titleTest-titleTest-titleTest-titleTest-title"),
+        TemplateProperties::default().with("title", "Test-title"),
     ));
 
     // register function bindings
@@ -66,7 +59,7 @@ fn setup(
                 .map(|s| Animation::tag(s))
                 .unwrap_or(Animation::default());
 
-            cmd.entity(entity).insert(AseUiAnimation {
+            cmd.entity(entity).insert(AseAnimation {
                 aseprite: server.load(ase_path),
                 animation,
             });
@@ -97,7 +90,7 @@ fn setup(
 
             let rng = rand::random::<u32>();
             props.insert("title".to_string(), format!("{}", rng));
-            cmd.trigger_targets(CompileContextEvent, **scope);
+            cmd.trigger(CompileContextEvent { entity: **scope });
         },
     );
 }
@@ -162,7 +155,7 @@ fn init_scrollable(In(entity): In<Entity>, mut cmd: Commands, tags: Query<&Tags>
 }
 
 fn update_scroll(
-    mut events: EventReader<MouseWheel>,
+    mut events: MessageReader<MouseWheel>,
     mut scrollables: Query<(&mut Scrollable, &mut HtmlStyle)>,
     time: Res<Time>,
 ) {
@@ -235,7 +228,7 @@ impl LifeTime {
 
 fn cleaner(mut expired: Query<(Entity, &mut LifeTime)>, mut cmd: Commands, time: Res<Time>) {
     expired.iter_mut().for_each(|(entity, mut lifetime)| {
-        if lifetime.tick(time.delta()).finished() {
+        if lifetime.tick(time.delta()).is_finished() {
             cmd.entity(entity).despawn();
         }
     });

@@ -205,6 +205,6 @@ fn sync_text_preview(
             text.0.clone_from(&text_input.value);
         });
 
-        cmd.trigger_targets(UiChangedEvent, entity);
+        cmd.trigger(UiChangedEvent { entity: entity });
     }
 }

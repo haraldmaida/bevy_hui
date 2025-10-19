@@ -8,13 +8,13 @@ use bevy::math::{Rect, UVec2, Vec2};
 use bevy::platform::collections::HashMap;
 use bevy::prelude::EaseFunction;
 use bevy::sprite::{BorderRect, SliceScaleMode, TextureSlicer};
-use bevy::text::{JustifyText, LineBreak, TextLayout};
-use bevy::ui::widget::NodeImageMode;
+use bevy::text::{LineBreak, TextLayout};
+use bevy::ui::widget::{NodeImageMode, TextShadow};
 use bevy::ui::{
     AlignContent, AlignItems, AlignSelf, Display, FlexDirection, FlexWrap, GlobalZIndex,
     GridAutoFlow, GridPlacement, GridTrack, JustifyContent, JustifyItems, JustifySelf, Outline,
     Overflow, OverflowAxis, OverflowClipBox, OverflowClipMargin, PositionType, RepeatedGridTrack,
-    TextShadow, ZIndex,
+    ZIndex,
 };
 use bevy::{
     color::Color,
@@ -424,7 +424,7 @@ where
         b"border_color" => map(parse_color, StyleAttr::BorderColor)(value)?,
         b"font" => map(as_string, |str| StyleAttr::Font(FontReference::Handle((*loader).load(str))))(value)?,
         b"font_color" => map(parse_color, StyleAttr::FontColor)(value)?,
-        b"text_layout" =>  map(parse_text_layout, StyleAttr::TextLayout)(value)?,
+        // b"text_layout" =>  map(parse_text_layout, StyleAttr::TextLayout)(value)?,
         b"font_size" => map(parse_float, StyleAttr::FontSize)(value)?,
         b"max_height" => map(parse_val, StyleAttr::MaxHeight)(value)?,
         b"max_width" => map(parse_val, StyleAttr::MaxWidth)(value)?,
@@ -1557,32 +1557,32 @@ where
     ))(input)
 }
 
-fn parse_text_layout<'a, E>(input: &'a [u8]) -> IResult<&'a [u8], TextLayout, E>
-where
-    E: ParseError<&'a [u8]> + ContextError<&'a [u8]>,
-{
-    let (input, (justify, _, linebreak)) = context(
-        "Is not a valid `TextLayout`, try `layout-Value linerbreak-Value`",
-        tuple((parse_justify_text, multispace0, parse_linerbreak)),
-    )(input)?;
+// fn parse_text_layout<'a, E>(input: &'a [u8]) -> IResult<&'a [u8], TextLayout, E>
+// where
+//     E: ParseError<&'a [u8]> + ContextError<&'a [u8]>,
+// {
+//     let (input, (justify, _, linebreak)) = context(
+//         "Is not a valid `TextLayout`, try `layout-Value linerbreak-Value`",
+//         tuple((parse_justify_text, multispace0, parse_linerbreak)),
+//     )(input)?;
+//
+//     Ok((input, TextLayout::new(justify, linebreak)))
+// }
 
-    Ok((input, TextLayout::new(justify, linebreak)))
-}
-
-fn parse_justify_text<'a, E>(input: &'a [u8]) -> IResult<&'a [u8], JustifyText, E>
-where
-    E: ParseError<&'a [u8]> + ContextError<&'a [u8]>,
-{
-    context(
-        "is not a valid justify text",
-        alt((
-            map(tag("left"), |_| JustifyText::Left),
-            map(tag("center"), |_| JustifyText::Center),
-            map(tag("justified"), |_| JustifyText::Justified),
-            map(tag("right"), |_| JustifyText::Right),
-        )),
-    )(input)
-}
+// fn parse_justify_text<'a, E>(input: &'a [u8]) -> IResult<&'a [u8], JustifyText, E>
+// where
+//     E: ParseError<&'a [u8]> + ContextError<&'a [u8]>,
+// {
+//     context(
+//         "is not a valid justify text",
+//         alt((
+//             map(tag("left"), |_| JustifyText::Left),
+//             map(tag("center"), |_| JustifyText::Center),
+//             map(tag("justified"), |_| JustifyText::Justified),
+//             map(tag("right"), |_| JustifyText::Right),
+//         )),
+//     )(input)
+// }
 
 fn parse_linerbreak<'a, E>(input: &'a [u8]) -> IResult<&'a [u8], LineBreak, E>
 where

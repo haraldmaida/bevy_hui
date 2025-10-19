@@ -42,19 +42,19 @@ impl Plugin for HuiSliderWidgetPlugin {
         app.register_type::<SliderAxis>();
         app.register_type::<Slider>();
         app.register_type::<SliderChangedEvent>();
-        app.add_event::<SliderChangedEvent>();
+        app.add_message::<SliderChangedEvent>();
         app.add_systems(PreStartup, setup);
         app.add_systems(
             Update,
             (
                 update_drag,
-                update_slider_value.run_if(on_event::<SliderChangedEvent>),
+                update_slider_value.run_if(on_message::<SliderChangedEvent>),
             ),
         );
     }
 }
 
-#[derive(Event, Reflect)]
+#[derive(Message, Reflect)]
 #[reflect]
 pub struct SliderChangedEvent {
     pub slider: Entity,
@@ -183,7 +183,8 @@ fn update_drag(
 
                         let slider_value = next_pos / max_pos;
                         style.computed.node.left = Val::Px(next_pos);
-                        slider_events.send(SliderChangedEvent {
+
+                        slider_events.write(SliderChangedEvent {
                             slider: nob.slider,
                             value: slider_value,
                         });
@@ -205,7 +206,7 @@ fn update_drag(
 
                         let slider_value = next_pos / max_pos;
                         style.computed.node.bottom = Val::Px(next_pos);
-                        slider_events.send(SliderChangedEvent {
+                        slider_events.write(SliderChangedEvent {
                             slider: nob.slider,
                             value: slider_value,
                         });
@@ -217,13 +218,13 @@ fn update_drag(
 
 fn update_slider_value(
     mut cmd: Commands,
-    mut events: EventReader<SliderChangedEvent>,
+    mut events: MessageReader<SliderChangedEvent>,
     mut sliders: Query<(Entity, &mut Slider)>,
 ) {
     for event in events.read() {
         _ = sliders.get_mut(event.slider).map(|(entity, mut slider)| {
             slider.value = event.value;
-            cmd.trigger_targets(UiChangedEvent, entity);
+            cmd.trigger(UiChangedEvent { entity: entity });
         });
     }
 }

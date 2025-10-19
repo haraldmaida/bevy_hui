@@ -287,7 +287,9 @@ fn spawn_ui(
             if let Some(node) = template.root.first() {
                 builder.build_tree(node);
                 builder.finalize_relations();
-                cmd.trigger_targets(CompileContextEvent, root_entity);
+                cmd.trigger(CompileContextEvent {
+                    entity: root_entity,
+                });
             } else {
                 warn!("template has no root node!");
             }
