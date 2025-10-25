@@ -11,7 +11,7 @@ readme = "README.md"
 categories = ["game-development"]
 
 [dependencies]
-bevy = { version = "0.16", default-features = false, features = [
+bevy = { version = "0.17", default-features = false, features = [
     "bevy_render",
     "bevy_ui",
     "bevy_asset",
@@ -19,7 +19,7 @@ bevy = { version = "0.16", default-features = false, features = [
     "bevy_text",
     "bevy_log",
 ] }
-bevy_picking = { version = "0.16", optional = true }
+bevy_picking = { version = "0.17", optional = true }
 thiserror = "2"
 nom = "7"
 owo-colors = "4"

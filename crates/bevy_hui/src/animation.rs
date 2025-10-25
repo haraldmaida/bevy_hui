@@ -1,4 +1,9 @@
-use bevy::{math::UVec2, prelude::{Component, ImageNode, Query, Res}, reflect::Reflect, time::{Time, Timer}};
+use bevy::{
+    math::UVec2,
+    prelude::{Component, ImageNode, Query, Res},
+    reflect::Reflect,
+    time::{Time, Timer},
+};
 
 use crate::styles::HtmlStyle;
 
@@ -14,7 +19,13 @@ pub struct Atlas {
 
 impl Default for Atlas {
     fn default() -> Self {
-        Atlas { size: [0,0].into(), columns: 0, rows: 0, padding: None, offset: None }
+        Atlas {
+            size: [0, 0].into(),
+            columns: 0,
+            rows: 0,
+            padding: None,
+            offset: None,
+        }
     }
 }
 
@@ -60,7 +71,7 @@ pub fn run_animations(
             continue;
         }
 
-        if active_animation.timer.finished() {
+        if active_animation.timer.is_finished() {
             let atlas = node.texture_atlas.as_mut().unwrap();
             let atlas_details = style.computed.atlas.as_ref().unwrap();
 
@@ -70,7 +81,9 @@ pub fn run_animations(
                 match active_animation.direction {
                     AnimationDirection::Forward => {
                         if atlas.index == frame_count - 1 {
-                            if style.computed.direction == AnimationDirection::AlternateForward || style.computed.direction == AnimationDirection::AlternateReverse{
+                            if style.computed.direction == AnimationDirection::AlternateForward
+                                || style.computed.direction == AnimationDirection::AlternateReverse
+                            {
                                 active_animation.direction = AnimationDirection::Reverse;
                                 active_animation.frame = frame_count - 2;
                             } else {
@@ -83,7 +96,9 @@ pub fn run_animations(
                     }
                     AnimationDirection::Reverse => {
                         if atlas.index == 0 {
-                            if style.computed.direction == AnimationDirection::AlternateForward || style.computed.direction == AnimationDirection::AlternateReverse{
+                            if style.computed.direction == AnimationDirection::AlternateForward
+                                || style.computed.direction == AnimationDirection::AlternateReverse
+                            {
                                 active_animation.direction = AnimationDirection::Forward;
                                 active_animation.frame = 1;
                             } else {
@@ -104,7 +119,9 @@ pub fn run_animations(
                 match active_animation.direction {
                     AnimationDirection::Forward => {
                         if active_animation.frame == frame_count - 1 {
-                            if style.computed.direction == AnimationDirection::AlternateForward || style.computed.direction == AnimationDirection::AlternateReverse{
+                            if style.computed.direction == AnimationDirection::AlternateForward
+                                || style.computed.direction == AnimationDirection::AlternateReverse
+                            {
                                 active_animation.direction = AnimationDirection::Reverse;
                                 active_animation.frame = frame_count - 2;
                             } else {
@@ -114,10 +131,12 @@ pub fn run_animations(
                         } else {
                             active_animation.frame = active_animation.frame + 1;
                         }
-                    },
+                    }
                     AnimationDirection::Reverse => {
                         if active_animation.frame == 0 {
-                            if style.computed.direction == AnimationDirection::AlternateForward || style.computed.direction == AnimationDirection::AlternateReverse{
+                            if style.computed.direction == AnimationDirection::AlternateForward
+                                || style.computed.direction == AnimationDirection::AlternateReverse
+                            {
                                 active_animation.direction = AnimationDirection::Forward;
                                 active_animation.frame = 1;
                             } else {
@@ -131,7 +150,8 @@ pub fn run_animations(
                     _ => (),
                 }
 
-                node.texture_atlas.as_mut().unwrap().index = style.computed.frames[active_animation.frame] as usize;
+                node.texture_atlas.as_mut().unwrap().index =
+                    style.computed.frames[active_animation.frame] as usize;
             }
         }
     }

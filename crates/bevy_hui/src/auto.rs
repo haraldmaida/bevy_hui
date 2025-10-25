@@ -65,7 +65,7 @@ fn check_loading_state(
 }
 
 fn watch_autoload_dirs(
-    mut events: EventReader<AssetEvent<LoadedFolder>>,
+    mut events: MessageReader<AssetEvent<LoadedFolder>>,
     config: Res<HuiAutoLoadPlugin>,
     mut comps: HtmlComponents,
     folders: Res<Assets<LoadedFolder>>,

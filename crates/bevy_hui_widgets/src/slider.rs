@@ -42,19 +42,19 @@ impl Plugin for HuiSliderWidgetPlugin {
         app.register_type::<SliderAxis>();
         app.register_type::<Slider>();
         app.register_type::<SliderChangedEvent>();
-        app.add_event::<SliderChangedEvent>();
+        app.add_message::<SliderChangedEvent>();
         app.add_systems(PreStartup, setup);
         app.add_systems(
             Update,
             (
                 update_drag,
-                update_slider_value.run_if(on_event::<SliderChangedEvent>),
+                update_slider_value.run_if(on_message::<SliderChangedEvent>),
             ),
         );
     }
 }
 
-#[derive(Event, Reflect)]
+#[derive(Message, Reflect)]
 #[reflect]
 pub struct SliderChangedEvent {
     pub slider: Entity,
@@ -143,13 +143,13 @@ fn init_slider(
 }
 
 fn update_drag(
-    mut slider_events: EventWriter<SliderChangedEvent>,
-    mut events: EventReader<bevy::input::mouse::MouseMotion>,
+    mut slider_messages: MessageWriter<SliderChangedEvent>,
+    mut mouse_motions: MessageReader<bevy::input::mouse::MouseMotion>,
     mut nobs: Query<(Entity, &SliderNob, &mut HtmlStyle, &Interaction)>,
     sliders: Query<&Slider>,
     computed_nodes: Query<&ComputedNode>,
 ) {
-    for event in events.read() {
+    for event in mouse_motions.read() {
         nobs.iter_mut()
             .filter(|(_, _, _, interaction)| matches!(interaction, Interaction::Pressed))
             .for_each(|(nob_entity, nob, mut style, _)| {
@@ -183,7 +183,7 @@ fn update_drag(
 
                         let slider_value = next_pos / max_pos;
                         style.computed.node.left = Val::Px(next_pos);
-                        slider_events.write(SliderChangedEvent {
+                        slider_messages.write(SliderChangedEvent {
                             slider: nob.slider,
                             value: slider_value,
                         });
@@ -205,7 +205,7 @@ fn update_drag(
 
                         let slider_value = next_pos / max_pos;
                         style.computed.node.bottom = Val::Px(next_pos);
-                        slider_events.write(SliderChangedEvent {
+                        slider_messages.write(SliderChangedEvent {
                             slider: nob.slider,
                             value: slider_value,
                         });
@@ -217,13 +217,13 @@ fn update_drag(
 
 fn update_slider_value(
     mut cmd: Commands,
-    mut events: EventReader<SliderChangedEvent>,
+    mut messages: MessageReader<SliderChangedEvent>,
     mut sliders: Query<(Entity, &mut Slider)>,
 ) {
-    for event in events.read() {
-        _ = sliders.get_mut(event.slider).map(|(entity, mut slider)| {
-            slider.value = event.value;
-            cmd.trigger_targets(UiChangedEvent, entity);
+    for message in messages.read() {
+        _ = sliders.get_mut(message.slider).map(|(entity, mut slider)| {
+            slider.value = message.value;
+            cmd.trigger(UiChangedEvent { entity });
         });
     }
 }

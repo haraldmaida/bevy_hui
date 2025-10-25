@@ -12,14 +12,14 @@ impl Plugin for HuiSelectWidgetPlugin {
         app.register_type::<SelectInput>();
         app.register_type::<SelectOption>();
         app.register_type::<SelectionChangedEvent>();
-        app.add_event::<SelectionChangedEvent>();
+        app.add_message::<SelectionChangedEvent>();
         app.add_systems(Startup, setup);
         app.add_systems(
             Update,
             (
                 open_list,
                 selection,
-                update_selection.run_if(on_event::<SelectionChangedEvent>),
+                update_selection.run_if(on_message::<SelectionChangedEvent>),
             ),
         );
     }
@@ -38,7 +38,7 @@ pub struct SelectOption {
     select: Entity,
 }
 
-#[derive(Event, Reflect, Debug)]
+#[derive(Message, Reflect, Debug)]
 #[reflect]
 pub struct SelectionChangedEvent {
     pub select: Entity,
@@ -88,7 +88,7 @@ fn open_list(
 }
 
 fn selection(
-    mut events: EventWriter<SelectionChangedEvent>,
+    mut messages: MessageWriter<SelectionChangedEvent>,
     options: Query<(Entity, &ChildOf, &Interaction, &SelectOption), Changed<Interaction>>,
     mut styles: Query<&mut HtmlStyle>,
 ) {
@@ -97,7 +97,7 @@ fn selection(
             continue;
         }
 
-        events.write(SelectionChangedEvent {
+        messages.write(SelectionChangedEvent {
             select: option.select,
             option: entity,
         });
@@ -111,14 +111,14 @@ fn selection(
 
 fn update_selection(
     mut cmd: Commands,
-    mut events: EventReader<SelectionChangedEvent>,
+    mut messages: MessageReader<SelectionChangedEvent>,
     mut texts: Query<&mut Text>,
     children: Query<&Children>,
     tags: Query<&Tags>,
 ) {
-    for event in events.read() {
+    for message in messages.read() {
         let Some(mut text) = children
-            .get(event.select)
+            .get(message.select)
             .ok()
             .map(|children| {
                 children
@@ -134,10 +134,12 @@ fn update_selection(
         };
 
         _ = tags
-            .get(event.option)
+            .get(message.option)
             .map(|tags| tags.get("value").map(|s| s.as_str()).unwrap_or_default())
             .map(|t| text.0 = t.into());
 
-        cmd.trigger_targets(UiChangedEvent, event.select);
+        cmd.trigger(UiChangedEvent {
+            entity: message.select,
+        });
     }
 }

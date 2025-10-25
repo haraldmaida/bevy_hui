@@ -138,7 +138,7 @@ fn focus(
 fn unfocus(
     mut cmd: Commands,
     text_inputs: Query<Entity, (With<TextInput>, With<UiActive>)>,
-    mut mouse_events: EventReader<MouseButtonInput>,
+    mut mouse_events: MessageReader<MouseButtonInput>,
 ) {
     for event in mouse_events.read() {
         if !event.state.is_pressed() {
@@ -153,7 +153,7 @@ fn unfocus(
 
 fn write_input(
     mut cmd: Commands,
-    mut events: EventReader<KeyboardInput>,
+    mut events: MessageReader<KeyboardInput>,
     mut text_inputs: Query<(Entity, &mut TextInput), With<UiActive>>,
 ) {
     if text_inputs.is_empty() {
@@ -205,6 +205,6 @@ fn sync_text_preview(
             text.0.clone_from(&text_input.value);
         });
 
-        cmd.trigger_targets(UiChangedEvent, entity);
+        cmd.trigger(UiChangedEvent { entity });
     }
 }
