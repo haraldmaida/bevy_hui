@@ -4,7 +4,6 @@ use bevy::{
     remote::{http::RemoteHttpPlugin, RemotePlugin},
 };
 use bevy_hui::prelude::*;
-use bevy_inspector_egui::{bevy_egui::EguiPlugin, quick::WorldInspectorPlugin};
 
 fn main() {
     App::new()
@@ -16,8 +15,6 @@ fn main() {
             RemoteHttpPlugin::default(),
             HuiPlugin,
         ))
-        .add_plugins(EguiPlugin::default())
-        .add_plugins(WorldInspectorPlugin::new())
         .add_systems(Startup, setup)
         .run();
 }
