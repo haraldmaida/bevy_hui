@@ -927,7 +927,7 @@ dependencies = [
  "nom",
  "owo-colors",
  "test-case",
- "thiserror 1.0.69",
+ "thiserror 2.0.17",
 ]
 
 [[package]]

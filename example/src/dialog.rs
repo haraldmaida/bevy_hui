@@ -1,8 +1,4 @@
-use bevy::{
-    image::ImageSamplerDescriptor,
-    prelude::*,
-    remote::{http::RemoteHttpPlugin, RemotePlugin},
-};
+use bevy::{image::ImageSamplerDescriptor, prelude::*};
 use bevy_hui::prelude::*;
 use bevy_inspector_egui::{bevy_egui::EguiPlugin, quick::WorldInspectorPlugin};
 
@@ -12,8 +8,6 @@ fn main() {
             DefaultPlugins.set(ImagePlugin {
                 default_sampler: ImageSamplerDescriptor::nearest(),
             }),
-            RemotePlugin::default(),
-            RemoteHttpPlugin::default(),
             HuiPlugin,
         ))
         .add_plugins(EguiPlugin::default())
