@@ -1,8 +1,4 @@
-use bevy::{
-    image::ImageSamplerDescriptor,
-    prelude::*,
-    remote::{http::RemoteHttpPlugin, RemotePlugin},
-};
+use bevy::{image::ImageSamplerDescriptor, prelude::*};
 use bevy_hui::prelude::*;
 
 fn main() {
@@ -11,8 +7,6 @@ fn main() {
             DefaultPlugins.set(ImagePlugin {
                 default_sampler: ImageSamplerDescriptor::nearest(),
             }),
-            RemotePlugin::default(),
-            RemoteHttpPlugin::default(),
             HuiPlugin,
         ))
         .add_systems(Startup, setup)
