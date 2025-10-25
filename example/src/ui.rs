@@ -1,9 +1,4 @@
-use bevy::{
-    image::ImageSamplerDescriptor,
-    input::mouse::MouseWheel,
-    prelude::*,
-    remote::{http::RemoteHttpPlugin, RemotePlugin},
-};
+use bevy::{image::ImageSamplerDescriptor, input::mouse::MouseWheel, prelude::*};
 use bevy_aseprite_ultra::prelude::*;
 use bevy_hui::prelude::*;
 
@@ -13,8 +8,6 @@ fn main() {
             DefaultPlugins.set(ImagePlugin {
                 default_sampler: ImageSamplerDescriptor::nearest(),
             }),
-            RemotePlugin::default(),
-            RemoteHttpPlugin::default(),
             AsepriteUltraPlugin,
             HuiPlugin,
             HuiAutoLoadPlugin::new(&["components"]),
